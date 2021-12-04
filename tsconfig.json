@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "target": "ES2020",
     "lib": [
       "es2020",
-      "dom"
+      "dom",
     ],
     "noImplicitAny": true,
     "removeComments": true,

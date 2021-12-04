@@ -4,15 +4,13 @@ const KEYWORDS = new Set([
   "LIST", // outputs a list of inputs
   "SENTENCE", "SE", // flat list of inputs (i.e. flattens arrays)
   "FPUT",
-
   "PRINT",
   "FIRST",
   "MAKE",  // set a variable
   "THING", // gets value of variable, also :var
-
 ])
 
-enum TokenType {
+export enum TokenType {
   NUMBER = 'NUMBER',
   PLUS = 'PLUS',
   MINUS = 'MINUS',
@@ -22,15 +20,27 @@ enum TokenType {
   LPAREN = 'LPAREN',
   NEWLINE = 'NEWLINE',
   SEMICOLON = 'SEMICOLON',
+  BOOLEAN = 'BOOLEAN',
   // string literals are prefixed with a single quotation mark
-  LITERAL = 'LITERAL',
+  STRING = 'STRING',
   // in Logo, variables are prefixed with a colon, making them easy for the lexer to parse out
   VARIABLE = 'VARIABLE',
   // a non-numeric word typed without punctuation represents a request to invoke the procedure named by that word
   PROCEDURE = 'PROCEDURE',
+  COMPARITOR = 'COMPARITOR',
+  EQL = 'EQL',
+  NEQ = 'NEQ',
+  LEQ = 'LEQ',
+  GEQ = 'GEQ',
+  LT = 'LT',
+  GT = 'GT',
 }
 
-type Token = {
+// TODO handle weird list tokenization with brackets
+
+export type BinaryTokenType = TokenType.PLUS | TokenType.MINUS | TokenType.MULTIPLY | TokenType.DIVIDE;
+
+export type Token = {
   type: TokenType;
   value?: string | number;
 }
@@ -54,6 +64,10 @@ export default function lex(input: string): Token[] {
     pos.col += 1;
     currentChar = input[pos.index]
   };
+
+  const peek = () => {
+    return input[pos.index + 1]
+  }
 
   const advanceLine = () => {
     while (currentChar !== '\n') {
@@ -85,7 +99,7 @@ export default function lex(input: string): Token[] {
 
   const tokenizeWord = (): Token => {
     const type = currentChar === '"'
-      ? TokenType.LITERAL
+      ? TokenType.STRING
       : currentChar === ':'
         ? TokenType.VARIABLE
         : TokenType.PROCEDURE;
@@ -133,7 +147,28 @@ export default function lex(input: string): Token[] {
     } else if (currentChar === ';') {
       tokens.push({ type: TokenType.SEMICOLON })
       advanceLine();
-      // TODO: logic for geq, leq, gt, lt
+    } else if (currentChar === '<') { // comparitors
+      if (peek() === '>') {
+        tokens.push({ type: TokenType.NEQ })
+        advance(); // extra advance
+      } else if (peek() === '=') {
+        tokens.push({ type: TokenType.LEQ })
+        advance(); // extra advance
+      } else {
+        tokens.push({ type: TokenType.LT })
+      }
+      advance();
+    } else if (currentChar === '>') {
+      if (peek() === '=') {
+        tokens.push({ type: TokenType.GEQ })
+        advance(); // extra advance
+      } else {
+        tokens.push({ type: TokenType.GT })
+      }
+      advance();
+    } else if (currentChar === '=') {
+      tokens.push({ type: TokenType.EQL })
+      advance();
     } else if (/\d|\./.test(currentChar)) { // numbers
       tokens.push(tokenizeNumber())
     } else if (/"|:|\w/.test(currentChar)) { // words
