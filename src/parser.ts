@@ -1,11 +1,33 @@
 import { BinaryTokenType, Token, TokenType } from "./lexer";
 
+const getPrecedence = (type: TokenType) => {
+  switch (type) {
+    case TokenType.LT:
+    case TokenType.GT:
+    case TokenType.LEQ:
+    case TokenType.GEQ:
+    case TokenType.EQL:
+      return 7;
+    case TokenType.PLUS:
+    case TokenType.MINUS:
+      return 10;
+    case TokenType.MULTIPLY:
+    case TokenType.DIVIDE:
+      return 20;
+    default:
+      // non-binary type so return -1
+      return -1
+    // throw new Error('Non-binary token type passed to get precedence!')
+  }
+}
+
 enum ASTNodeType {
   Program = 'Program',
   ProcedureDefinition = 'ProcedureDefinition',
   ProcedureCall = 'ProcedureCall',
   NumberLiteral = "NumberLiteral",
   StringLiteral = "StringLiteral",
+  InfixOperation = "InfixOperation",
 }
 
 
@@ -18,12 +40,35 @@ type ASTProgramNode = ASTNode & {
   program: ASTNode[];
 }
 
+type ASTInfixNode = ASTNode & {
+  left: ASTNode,
+  right: ASTNode
+}
+
+type ASTProcedureNode = ASTNode & {
+  args: ASTNode[]
+}
+
+const InfixOperators = new Set([
+  TokenType.PLUS,
+  TokenType.MINUS,
+  TokenType.MULTIPLY,
+  TokenType.DIVIDE,
+  TokenType.EQL,
+  TokenType.NEQ,
+  TokenType.LEQ,
+  TokenType.GEQ,
+  TokenType.LT,
+  TokenType.GT,
+])
 
 export default class Parser {
   tokens: Token[];
   currentToken: Token;
   tokenCount: number;
   index = 0;
+
+
 
   constructor(tokens: Token[]) {
     this.tokens = tokens;
@@ -42,28 +87,112 @@ export default class Parser {
     return this.tokens[this.index + 1]
   }
 
+  parseInfix = (left: ASTNode): ASTInfixNode => {
+    console.log('parsing infix, current is', this.currentToken);
 
-  parseExpression = (): ASTNode => {
+    const curr = this.currentToken;
+    const prec = getPrecedence(this.currentToken.type);
+    this.advance();
+
+    const right = this.parseExpression(prec);
+
     return {
-      type: ASTNodeType.NumberLiteral
+      type: ASTNodeType.InfixOperation,
+      value: curr.type,
+      left,
+      right,
     }
   }
 
-  parseProcedureDefinition = (): ASTNode => {
-    const node = {
-      type: ASTNodeType.ProcedureDefinition,
-      value: this.currentToken.value,
-      args: this.parseExpression()
+  parseNumber = (): ASTNode => ({
+    type: ASTNodeType.NumberLiteral,
+    value: this.currentToken.value
+  })
+
+  parseGroup = (): ASTNode => {
+    // advance past the lparen
+    this.advance();
+    const expr = this.parseExpression();
+    if (this.peek().type !== TokenType.RPAREN) {
+      throw new Error('Missing closing parentheses on expression')
     }
     this.advance()
-    return node;
+    return expr;
   }
+
+  parseProcedureCall = (): ASTProcedureNode => {
+    const token = this.currentToken;
+    const args: ASTNode[] = [];
+
+    // check if this is the end of the procedure's arguments
+    const nextType = this.peek().type
+    if (nextType === TokenType.NEWLINE || nextType === TokenType.EOF) {
+      this.advance();
+      return {
+        type: ASTNodeType.ProcedureCall,
+        value: token.value,
+        args
+      }
+    }
+
+    this.advance()
+    args.push(this.parseExpression())
+    // TODO: deal with weird comma syntax in logo - I think they CAN be used but arent usually
+    return {
+      type: ASTNodeType.ProcedureCall,
+      value: token.value,
+      args
+    }
+  }
+
+  parseExpression = (precedence = 0): ASTNode => {
+    console.log('parsing expression, current is', this.currentToken);
+
+    let left: ASTNode;
+
+
+    switch (this.currentToken.type) {
+      case TokenType.NUMBER:
+        left = this.parseNumber()
+        break;
+      case TokenType.LPAREN:
+        left = this.parseGroup()
+        break;
+      case TokenType.PROCEDURE:
+        left = this.parseProcedureCall();
+        break;
+
+      default:
+        throw new Error(`Unsupported node type ${this.currentToken.type}`)
+    }
+
+    while (precedence < getPrecedence(this.peek().type)) {
+      // parse infix expression
+      if (InfixOperators.has(this.peek().type)) {
+        // TODO: parse calls
+        this.advance();
+        left = this.parseInfix(left);
+      } else {
+        return left;
+      }
+    }
+    return left;
+  }
+
+
+  // parseStatement = (): ASTNode => {
+  //   // TODO: assignment expression
+  //   return this.parseBinary()
+  // }
 
   parse = (): ASTProgramNode => {
     const program: ASTNode[] = [];
-    while (this.index < this.tokenCount) {
-      program.push(this.parseExpression())
+
+    while (this.currentToken.type !== TokenType.EOF) {
+      program.push(this.parseExpression());
+      this.advance();
     }
+
     return {
       type: ASTNodeType.Program,
       program: program

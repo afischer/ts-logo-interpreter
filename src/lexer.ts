@@ -27,13 +27,13 @@ export enum TokenType {
   VARIABLE = 'VARIABLE',
   // a non-numeric word typed without punctuation represents a request to invoke the procedure named by that word
   PROCEDURE = 'PROCEDURE',
-  COMPARITOR = 'COMPARITOR',
   EQL = 'EQL',
   NEQ = 'NEQ',
   LEQ = 'LEQ',
   GEQ = 'GEQ',
   LT = 'LT',
   GT = 'GT',
+  EOF = 'EOF'
 }
 
 // TODO handle weird list tokenization with brackets
@@ -52,7 +52,12 @@ type Position = {
   index: number;
 }
 
+/**
+ * Tokenization in Logo has some quirks, some of which make it difficult to parse, some of which 
+ * make it easier! TK add stuff on why that is and some documentation.
+ */
 export default function lex(input: string): Token[] {
+  // break up into tokenizer and lexer?
   const tokens: Token[] = [];
 
   const inputLen = input.length;
@@ -116,6 +121,7 @@ export default function lex(input: string): Token[] {
     return { type, value }
   }
 
+  // TODO: p6 A line(an instruction line or one read by READLIST or READWORD) can be continued onto the following line if its last character is a tilde(~)
   while (pos.index !== inputLen) {
     process.stdout.write(currentChar);
     if (currentChar === '\n') {
@@ -179,6 +185,6 @@ export default function lex(input: string): Token[] {
   }
 
 
-  // tokens.push({ type: 'EOF', value: '<EOF>' })
+  tokens.push({ type: TokenType.EOF })
   return tokens;
 }

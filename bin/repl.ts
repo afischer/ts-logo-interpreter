@@ -1,6 +1,6 @@
 import * as readline from 'readline';
 import lex from "../src/lexer";
-import Parser from "../src/parser_old";
+import Parser from "../src/parser";
 
 
 const rl = readline.createInterface({
@@ -16,10 +16,10 @@ const run = () => {
       console.log(lexed);
 
       console.log('Parsed AST:')
-      // const parser = new Parser(lexed);
+      const parser = new Parser(lexed);
 
-      // const ast = parser.parse();
-      // console.log(ast)
+      const ast = parser.parse();
+      console.log(JSON.stringify(ast, null, 2))
       run()
     } catch (error) {
       console.error(error)
