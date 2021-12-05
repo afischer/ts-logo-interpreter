@@ -1,4 +1,5 @@
 import * as readline from 'readline';
+import interpret from '../src/interpreter';
 import lex from "../src/lexer";
 import Parser from "../src/parser";
 
@@ -20,6 +21,8 @@ const run = () => {
 
       const ast = parser.parse();
       console.log(JSON.stringify(ast, null, 2))
+
+      interpret(ast)
       run()
     } catch (error) {
       console.error(error)

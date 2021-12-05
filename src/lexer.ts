@@ -113,7 +113,7 @@ export default function lex(input: string): Token[] {
     let value = type === TokenType.PROCEDURE ? currentChar : '';
     advance();
 
-    while (/\w|\./.test(currentChar)) {
+    while (currentChar && /\w|\./.test(currentChar)) {
       value += currentChar;
       advance()
     }
@@ -135,6 +135,7 @@ export default function lex(input: string): Token[] {
     } else if (currentChar === '+') {
       tokens.push({ type: TokenType.PLUS })
       advance();
+      // TODO: deal with negative numbers
     } else if (currentChar === '-') {
       tokens.push({ type: TokenType.MINUS })
       advance();

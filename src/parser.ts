@@ -21,31 +21,39 @@ const getPrecedence = (type: TokenType) => {
   }
 }
 
-enum ASTNodeType {
+const VARIABLE_DECLARATION_KEYWORD = 'MAKE'
+
+export enum ASTNodeType {
   Program = 'Program',
-  ProcedureDefinition = 'ProcedureDefinition',
   ProcedureCall = 'ProcedureCall',
   NumberLiteral = "NumberLiteral",
   StringLiteral = "StringLiteral",
   InfixOperation = "InfixOperation",
+  Variable = "Variable",
+  Assignment = "Assignment",
+  // ProcedureDefinition = 'ProcedureDefinition',
 }
 
 
-type ASTNode = {
+export type ASTNode = {
   type: ASTNodeType;
-  value?: string | number;
+  value?: string | number | ASTNode;
 }
 
-type ASTProgramNode = ASTNode & {
+export type ASTProgramNode = ASTNode & {
   program: ASTNode[];
 }
 
-type ASTInfixNode = ASTNode & {
+export type ASTInfixNode = ASTNode & {
   left: ASTNode,
   right: ASTNode
 }
 
-type ASTProcedureNode = ASTNode & {
+type ASTAssignmentNode = ASTNode & {
+  name: string;
+}
+
+export type ASTProcedureNode = ASTNode & {
   args: ASTNode[]
 }
 
@@ -109,6 +117,16 @@ export default class Parser {
     value: this.currentToken.value
   })
 
+  parseString = (): ASTNode => ({
+    type: ASTNodeType.StringLiteral,
+    value: this.currentToken.value
+  })
+
+  parseVariable = (): ASTNode => ({
+    type: ASTNodeType.Variable,
+    value: this.currentToken.value
+  })
+
   parseGroup = (): ASTNode => {
     // advance past the lparen
     this.advance();
@@ -118,6 +136,21 @@ export default class Parser {
     }
     this.advance()
     return expr;
+  }
+
+  parseVariableAssignment = (): ASTAssignmentNode => {
+    this.advance();
+    if (this.currentToken.type !== TokenType.STRING) {
+      throw new Error('Variable name must be a quote-prefixed word.')
+    }
+    const varName = this.currentToken.value as string;
+    this.advance()
+    const varDef = this.parseExpression();
+    return {
+      type: ASTNodeType.Assignment,
+      name: varName,
+      value: varDef
+    }
   }
 
   parseProcedureCall = (): ASTProcedureNode => {
@@ -136,7 +169,10 @@ export default class Parser {
     }
 
     this.advance()
-    args.push(this.parseExpression())
+    while (this.currentToken.type !== TokenType.NEWLINE && this.currentToken.type !== TokenType.EOF) {
+      args.push(this.parseExpression())
+      this.advance()
+    }
     // TODO: deal with weird comma syntax in logo - I think they CAN be used but arent usually
     return {
       type: ASTNodeType.ProcedureCall,
@@ -155,10 +191,22 @@ export default class Parser {
       case TokenType.NUMBER:
         left = this.parseNumber()
         break;
+      case TokenType.STRING:
+        left = this.parseString()
+        break;
+      case TokenType.VARIABLE:
+        left = this.parseVariable()
+        break;
       case TokenType.LPAREN:
         left = this.parseGroup()
         break;
       case TokenType.PROCEDURE:
+        // // THIS ISN'T ACTUALLY REALLY CORRECT AS BOTH THE NAME AND VALUE CAN BE PROCEDURE CALLS!!
+        // // oh boy
+        // if (/make/i.test(this.currentToken.value as string)) {
+        //   left = this.parseVariableAssignment();
+        //   break;
+        // }
         left = this.parseProcedureCall();
         break;
 
@@ -166,7 +214,7 @@ export default class Parser {
         throw new Error(`Unsupported node type ${this.currentToken.type}`)
     }
 
-    while (precedence < getPrecedence(this.peek().type)) {
+    while (precedence < getPrecedence((this.peek() || {}).type)) {
       // parse infix expression
       if (InfixOperators.has(this.peek().type)) {
         // TODO: parse calls
