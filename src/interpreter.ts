@@ -1,12 +1,25 @@
 import { TokenType } from "./lexer";
 import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureNode, ASTProgramNode } from "./parser";
 
-class Environment {
+export class Environment {
   parent: Environment;
   vars: Map<string, any> = new Map();
+  procedures: Map<string, any> = new Map();
 
   constructor(parent?: Environment) {
     this.parent = parent
+
+    // Make is a special procedure for setting variables
+    this.defineProcedure("make", (...args: any[]) => {
+      if (args.length < 2) {
+        throw new Error("Not enough inputs to MAKE")
+      } else if (args.length > 2) {
+        throw new Error(`You don't say what to do with ${args[2]}`);
+      }
+      this.set(args[0], args[1]);
+    })
+    this.defineProcedure("print", (val: string) => console.log(val))
+
   }
 
   /**
@@ -30,9 +43,11 @@ class Environment {
   }
 
   /**
-   * Variable getter and setter
+   * Variable getter and setter.
+   * TODO: Make this case insensitive
    */
   get = (name: string) => {
+    console.log(this.vars)
     if (this.vars.has(name)) return this.vars.get(name);
     throw new Error(`Undefined variable ${name}`);
   }
@@ -41,11 +56,22 @@ class Environment {
     // maybe we should add some guards against assigning to global vars?? need
     // to check implemementaton
     this.vars.set(name, value);
+    console.log(this.vars)
+  }
+
+  defineProcedure = (name: string, value: any) => {
+    // maybe we should add some guards against assigning to global vars?? need
+    // to check implemementaton
+    this.procedures.set(name, value);
+  }
+
+  getProcedure = (name: string) => {
+    if (this.procedures.has(name)) return this.procedures.get(name);
+    throw new Error(`I don't know how to ${name}`);
   }
 }
 
 function evaluateBinaryOp(operator: string, left: number, right: number) {
-  console.log('evaluating binop', operator, left, right)
   switch (operator) {
     case TokenType.PLUS: return left + right;
     case TokenType.MINUS: return left - right;
@@ -62,7 +88,7 @@ function evaluateBinaryOp(operator: string, left: number, right: number) {
   }
 }
 
-function evaluate(exp: ASTNode, env: Environment): any {
+export function evaluate(exp: ASTNode, env: Environment): any {
   switch (exp.type) {
     // for literals, just return the value
     case ASTNodeType.StringLiteral:
@@ -86,13 +112,11 @@ function evaluate(exp: ASTNode, env: Environment): any {
       return evaluateBinaryOp(operator, left, right);
 
 
-    // case ASTNodeType.ProcedureCall:
-    //   const parsedArgs = (exp as ASTProcedureNode).args.map(arg => evaluate(arg, env));
-
-    // const func = evaluate(exp, env);
-
-    // case ASTNodeType.Assignment:
-    //   return env.
+    case ASTNodeType.ProcedureCall:
+      const func = env.getProcedure(exp.value as string);
+      const parsedArgs = (exp as ASTProcedureNode).args.map(arg => evaluate(arg, env));
+      console.log('running', exp.value, 'with args', parsedArgs)
+      return func(...parsedArgs);
     default:
       throw new Error(`I don't know how to evaluate ${exp.type} yet...`)
       break;
@@ -101,8 +125,5 @@ function evaluate(exp: ASTNode, env: Environment): any {
 
 export default function interpret(ast: ASTProgramNode) {
   const globalEnv = new Environment();
-
-  globalEnv.set("print", (val: string) => console.log(val))
-
   evaluate(ast, globalEnv)
 }

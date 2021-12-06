@@ -49,10 +49,6 @@ export type ASTInfixNode = ASTNode & {
   right: ASTNode
 }
 
-type ASTAssignmentNode = ASTNode & {
-  name: string;
-}
-
 export type ASTProcedureNode = ASTNode & {
   args: ASTNode[]
 }
@@ -138,21 +134,6 @@ export default class Parser {
     return expr;
   }
 
-  parseVariableAssignment = (): ASTAssignmentNode => {
-    this.advance();
-    if (this.currentToken.type !== TokenType.STRING) {
-      throw new Error('Variable name must be a quote-prefixed word.')
-    }
-    const varName = this.currentToken.value as string;
-    this.advance()
-    const varDef = this.parseExpression();
-    return {
-      type: ASTNodeType.Assignment,
-      name: varName,
-      value: varDef
-    }
-  }
-
   parseProcedureCall = (): ASTProcedureNode => {
     const token = this.currentToken;
     const args: ASTNode[] = [];
@@ -201,12 +182,7 @@ export default class Parser {
         left = this.parseGroup()
         break;
       case TokenType.PROCEDURE:
-        // // THIS ISN'T ACTUALLY REALLY CORRECT AS BOTH THE NAME AND VALUE CAN BE PROCEDURE CALLS!!
-        // // oh boy
-        // if (/make/i.test(this.currentToken.value as string)) {
-        //   left = this.parseVariableAssignment();
-        //   break;
-        // }
+        // variable assignment is just a special primitive procedure, "make"
         left = this.parseProcedureCall();
         break;
 

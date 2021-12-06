@@ -1,5 +1,5 @@
 import * as readline from 'readline';
-import interpret from '../src/interpreter';
+import interpret, { evaluate, Environment } from '../src/interpreter';
 import lex from "../src/lexer";
 import Parser from "../src/parser";
 
@@ -9,7 +9,10 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+const replEnv = new Environment();
+
 const run = () => {
+
   rl.question('logo > ', (input) => {
     try {
       const lexed = lex(input);
@@ -22,7 +25,7 @@ const run = () => {
       const ast = parser.parse();
       console.log(JSON.stringify(ast, null, 2))
 
-      interpret(ast)
+      evaluate(ast, replEnv);
       run()
     } catch (error) {
       console.error(error)
