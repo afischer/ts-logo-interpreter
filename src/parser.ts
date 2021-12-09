@@ -26,12 +26,12 @@ const VARIABLE_DECLARATION_KEYWORD = 'MAKE'
 export enum ASTNodeType {
   Program = 'Program',
   ProcedureCall = 'ProcedureCall',
+  ProcedureDefinition = 'ProcedureDefinition',
   NumberLiteral = "NumberLiteral",
   StringLiteral = "StringLiteral",
   InfixOperation = "InfixOperation",
   Variable = "Variable",
   Assignment = "Assignment",
-  // ProcedureDefinition = 'ProcedureDefinition',
 }
 
 
@@ -47,6 +47,11 @@ export type ASTProgramNode = ASTNode & {
 export type ASTInfixNode = ASTNode & {
   left: ASTNode,
   right: ASTNode
+}
+
+export type ASTProcedureDefNode = ASTNode & {
+  vars: ASTNode[]
+  body: ASTNode[]
 }
 
 export type ASTProcedureNode = ASTNode & {
@@ -162,6 +167,43 @@ export default class Parser {
     }
   }
 
+  parseProcedureDefinition = (): ASTProcedureDefNode => {
+    this.advance();
+    const procedureToken = this.currentToken;
+    if (procedureToken.type !== TokenType.PROCEDURE) {
+      throw new Error(`Expected procedure name, got ${this.currentToken.type} ${this.currentToken.value}`)
+    }
+
+    const vars: ASTNode[] = [];
+    const body: ASTNode[] = [];
+    this.advance();
+    // TODO: Optional args, REST args, default number
+    while (this.currentToken.type === TokenType.VARIABLE) {
+      vars.push(this.parseExpression())
+      this.advance();
+    }
+
+    let finishedParsing = false;
+    while (!finishedParsing) {
+      if (this.currentToken.type !== TokenType.PROCEDURE) {
+        finishedParsing = /^end$/i.test(this.currentToken.value as string)
+        break;
+      }
+
+      body.push(this.parseExpression())
+      this.advance();
+    }
+
+    this.advance(); // advance past "END"
+
+    return {
+      type: ASTNodeType.ProcedureDefinition,
+      value: procedureToken.value,
+      vars,
+      body
+    }
+  }
+
   parseExpression = (precedence = 0): ASTNode => {
     console.log('parsing expression, current is', this.currentToken);
 
@@ -182,8 +224,15 @@ export default class Parser {
         left = this.parseGroup()
         break;
       case TokenType.PROCEDURE:
+        if (`${this.currentToken.value}`.toLowerCase() === "to") {
+          left = this.parseProcedureDefinition();
+          break;
+        }
         // variable assignment is just a special primitive procedure, "make"
         left = this.parseProcedureCall();
+        break;
+
+      case TokenType.NEWLINE:
         break;
 
       default:
