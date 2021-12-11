@@ -1,5 +1,6 @@
 import { TokenType } from "./lexer";
 import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
+import registerPrimitives from "./stdlib";
 
 export class Environment {
   parent: Environment;
@@ -9,18 +10,8 @@ export class Environment {
   constructor(parent?: Environment) {
     this.parent = parent
 
-    // Make is a special procedure for setting variables
-    this.defineProcedure("make", (...args: any[]) => {
-      if (args.length < 2) {
-        throw new Error("Not enough inputs to MAKE")
-      } else if (args.length > 2) {
-        throw new Error(`You don't say what to do with ${args[2]}`);
-      }
-      this.set(args[0], args[1]);
-    })
-    this.defineProcedure("print", (val: string) => console.log(val))
-    // end is a NOOP, should just be at the end of procedure definitions
-    this.defineProcedure("end", () => {})
+    registerPrimitives(this)
+
 
   }
 
@@ -112,7 +103,14 @@ export function evaluate(exp: ASTNode, env: Environment): any {
     // for programs, evaluate each of the expressions in them in them
     case ASTNodeType.Program:
       // probably should be a foreach
-      return (exp as ASTProgramNode).program.map(exp => evaluate(exp, env))
+      const returnVal = (exp as ASTProgramNode).program.map(exp => evaluate(exp, env))
+      // all return vals should be undefined; procedures shoudl use all variables
+      const unknownVal = returnVal.flatMap(x => x).find(x => x !== undefined);
+      if (unknownVal) {
+        throw new Error(`You don't say what to do with ${unknownVal}`);
+      }
+      return returnVal;
+
 
     // for variables, return their value
     case ASTNodeType.Variable:
@@ -136,7 +134,6 @@ export function evaluate(exp: ASTNode, env: Environment): any {
       return func(...parsedArgs);
     default:
       throw new Error(`I don't know how to evaluate ${exp.type} yet...`)
-      break;
   }
 }
 
