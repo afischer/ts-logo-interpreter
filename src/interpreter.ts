@@ -1,5 +1,5 @@
 import { TokenType } from "./lexer";
-import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureNode, ASTProgramNode } from "./parser";
+import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
 
 export class Environment {
   parent: Environment;
@@ -19,6 +19,8 @@ export class Environment {
       this.set(args[0], args[1]);
     })
     this.defineProcedure("print", (val: string) => console.log(val))
+    // end is a NOOP, should just be at the end of procedure definitions
+    this.defineProcedure("end", () => {})
 
   }
 
@@ -47,7 +49,6 @@ export class Environment {
    * TODO: Make this case insensitive
    */
   get = (name: string) => {
-    console.log(this.vars)
     if (this.vars.has(name)) return this.vars.get(name);
     throw new Error(`Undefined variable ${name}`);
   }
@@ -56,7 +57,7 @@ export class Environment {
     // maybe we should add some guards against assigning to global vars?? need
     // to check implemementaton
     this.vars.set(name, value);
-    console.log(this.vars)
+    console.log('vars are now', this.vars)
   }
 
   defineProcedure = (name: string, value: any) => {
@@ -88,6 +89,20 @@ function evaluateBinaryOp(operator: string, left: number, right: number) {
   }
 }
 
+function evaluateProcedureDefinition(exp: ASTProcedureDefNode, env: Environment) {
+  const procedureName = exp.value as string;
+  const procedure = (...args: (string | number)[]) => {
+    const vars = exp.vars;
+    const scope = env.extend();
+    // need to do some stuff with scope as vars are global in logo
+    vars.forEach((variable, i) => {
+      scope.set(variable.value as string, i < args.length ? args[i] : undefined);
+    });
+    return evaluate(exp.body, scope);
+  }
+  env.defineProcedure(procedureName, procedure);
+}
+
 export function evaluate(exp: ASTNode, env: Environment): any {
   switch (exp.type) {
     // for literals, just return the value
@@ -111,11 +126,13 @@ export function evaluate(exp: ASTNode, env: Environment): any {
       const operator = node.value as string;
       return evaluateBinaryOp(operator, left, right);
 
+    case ASTNodeType.ProcedureDefinition:
+      return evaluateProcedureDefinition(exp as ASTProcedureDefNode, env)
 
     case ASTNodeType.ProcedureCall:
       const func = env.getProcedure(exp.value as string);
       const parsedArgs = (exp as ASTProcedureNode).args.map(arg => evaluate(arg, env));
-      console.log('running', exp.value, 'with args', parsedArgs)
+      // console.log('running', exp.value, 'with args', parsedArgs, func.toString())
       return func(...parsedArgs);
     default:
       throw new Error(`I don't know how to evaluate ${exp.type} yet...`)

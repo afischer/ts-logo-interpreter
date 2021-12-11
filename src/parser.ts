@@ -51,7 +51,7 @@ export type ASTInfixNode = ASTNode & {
 
 export type ASTProcedureDefNode = ASTNode & {
   vars: ASTNode[]
-  body: ASTNode[]
+  body: ASTProgramNode;
 }
 
 export type ASTProcedureNode = ASTNode & {
@@ -194,13 +194,14 @@ export default class Parser {
       this.advance();
     }
 
-    this.advance(); // advance past "END"
-
     return {
       type: ASTNodeType.ProcedureDefinition,
       value: procedureToken.value,
       vars,
-      body
+      body: {
+        type: ASTNodeType.Program,
+        program: body
+      }
     }
   }
 
@@ -208,7 +209,6 @@ export default class Parser {
     console.log('parsing expression, current is', this.currentToken);
 
     let left: ASTNode;
-
 
     switch (this.currentToken.type) {
       case TokenType.NUMBER:
