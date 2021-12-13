@@ -1,15 +1,3 @@
-const KEYWORDS = new Set([
-  // 2.1 Constructors
-  "WORD", // concats words
-  "LIST", // outputs a list of inputs
-  "SENTENCE", "SE", // flat list of inputs (i.e. flattens arrays)
-  "FPUT",
-  "PRINT",
-  "FIRST",
-  "MAKE",  // set a variable
-  "THING", // gets value of variable, also :var
-])
-
 export enum TokenType {
   NUMBER = 'NUMBER',
   PLUS = 'PLUS',
@@ -18,6 +6,10 @@ export enum TokenType {
   DIVIDE = 'DIVIDE',
   RPAREN = 'RPAREN',
   LPAREN = 'LPAREN',
+  RBRACKET = 'RBRACKET',
+  LBRACKET = 'LBRACKET',
+  RBRACE = 'RBRACE',
+  LBRACE = 'LBRACE',
   NEWLINE = 'NEWLINE',
   SEMICOLON = 'SEMICOLON',
   BOOLEAN = 'BOOLEAN',
@@ -53,7 +45,7 @@ type Position = {
 }
 
 /**
- * Tokenization in Logo has some quirks, some of which make it difficult to parse, some of which 
+ * Tokenization in Logo has some quirks, some of which make it difficult to parse, some of which
  * make it easier! TK add stuff on why that is and some documentation.
  */
 export default function lex(input: string): Token[] {
@@ -109,8 +101,8 @@ export default function lex(input: string): Token[] {
         ? TokenType.VARIABLE
         : TokenType.PROCEDURE;
 
-    // only use first char if it's a procedure
-    let value = type === TokenType.PROCEDURE ? currentChar : '';
+    // allow parser to strip off colon, quote
+    let value = currentChar; // type === TokenType.PROCEDURE ? currentChar : '';
     advance();
 
     while (currentChar && /\w|\./.test(currentChar)) {
@@ -150,6 +142,18 @@ export default function lex(input: string): Token[] {
       advance();
     } else if (currentChar === ')') {
       tokens.push({ type: TokenType.RPAREN })
+      advance();
+    } else if (currentChar === '[') {
+      tokens.push({ type: TokenType.LBRACKET })
+      advance();
+    } else if (currentChar === ']') {
+      tokens.push({ type: TokenType.RBRACKET })
+      advance();
+    } else if (currentChar === '{') {
+      tokens.push({ type: TokenType.LBRACE })
+      advance();
+    } else if (currentChar === '}') {
+      tokens.push({ type: TokenType.RBRACE })
       advance();
     } else if (currentChar === ';') {
       tokens.push({ type: TokenType.SEMICOLON })

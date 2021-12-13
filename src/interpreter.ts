@@ -11,8 +11,6 @@ export class Environment {
     this.parent = parent
 
     registerPrimitives(this)
-
-
   }
 
   /**
@@ -96,9 +94,10 @@ function evaluateProcedureDefinition(exp: ASTProcedureDefNode, env: Environment)
 
 export function evaluate(exp: ASTNode, env: Environment): any {
   switch (exp.type) {
-    // for literals, just return the value
+    // for literals and lists, just return the value
     case ASTNodeType.StringLiteral:
     case ASTNodeType.NumberLiteral:
+    case ASTNodeType.List:
       return exp.value;
     // for programs, evaluate each of the expressions in them in them
     case ASTNodeType.Program:
@@ -106,7 +105,9 @@ export function evaluate(exp: ASTNode, env: Environment): any {
       const returnVal = (exp as ASTProgramNode).program.map(exp => evaluate(exp, env))
       // all return vals should be undefined; procedures shoudl use all variables
       const unknownVal = returnVal.flatMap(x => x).find(x => x !== undefined);
+
       if (unknownVal) {
+        // TODO: this is unhelpful for lists
         throw new Error(`You don't say what to do with ${unknownVal}`);
       }
       return returnVal;

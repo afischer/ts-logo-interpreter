@@ -1,4 +1,5 @@
 import { Environment } from "./interpreter";
+import { ASTNode, ASTNodeType } from "./parser";
 
 function checkInputs(funcName: string, exact: number, args: any[], type?: string) {
   if (args.length < exact) {
@@ -15,6 +16,18 @@ function checkInputs(funcName: string, exact: number, args: any[], type?: string
 
 function unimplemented() {
   throw new Error('Function unimplemented.')
+}
+
+function getListString(list: ASTNode[]) {
+  let listStr = '['
+  list.forEach(entry => {
+    if (entry.type === ASTNodeType.List) {
+      listStr += getListString(entry.value as ASTNode[])
+    } else {
+      listStr += entry.value + ' '
+    }
+  })
+  return listStr + '] ';
 }
 
 export default function registerPrimitives(env: Environment) {
@@ -90,8 +103,12 @@ export default function registerPrimitives(env: Environment) {
     /** 4 Communication */
     // 4.1 Transmitters
     print: (...args) => {
-      process.stdout.write(args.join(' ') + '\n')
-      return undefined;
+      if (Array.isArray(args[0])) {
+        process.stdout.write(getListString(args[0]) + '\n')
+        return;
+      }
+      process.stdout.write(args + '\n')
+      return;
     },
     type: undefined,
     show: undefined,

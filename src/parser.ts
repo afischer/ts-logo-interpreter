@@ -21,8 +21,6 @@ const getPrecedence = (type: TokenType) => {
   }
 }
 
-const VARIABLE_DECLARATION_KEYWORD = 'MAKE'
-
 export enum ASTNodeType {
   Program = 'Program',
   ProcedureCall = 'ProcedureCall',
@@ -32,12 +30,13 @@ export enum ASTNodeType {
   InfixOperation = "InfixOperation",
   Variable = "Variable",
   Assignment = "Assignment",
+  List = "List",
 }
 
 
 export type ASTNode = {
   type: ASTNodeType;
-  value?: string | number | ASTNode;
+  value?: string | number | ASTNode | ASTNode[];
 }
 
 export type ASTProgramNode = ASTNode & {
@@ -120,12 +119,14 @@ export default class Parser {
 
   parseString = (): ASTNode => ({
     type: ASTNodeType.StringLiteral,
-    value: this.currentToken.value
+    // strip off leading "
+    value: (this.currentToken.value as string).substring(1)
   })
 
   parseVariable = (): ASTNode => ({
     type: ASTNodeType.Variable,
-    value: this.currentToken.value
+    // strip off leading :
+    value: (this.currentToken.value as string).substring(1)
   })
 
   parseGroup = (): ASTNode => {
@@ -137,6 +138,31 @@ export default class Parser {
     }
     this.advance()
     return expr;
+  }
+
+  parseList = (): ASTNode => {
+    this.advance();
+    const items: ASTNode[] = [];
+    while (this.currentToken.type !== TokenType.RBRACKET) {
+      if (this.currentToken.type === TokenType.EOF) {
+        throw new Error('Missing closing bracket on list')
+      } else if (this.currentToken.type === TokenType.LBRACKET) {
+        items.push(this.parseList())
+        this.advance()
+      } else {
+        // treat all items in a list as if they were a word
+        items.push({
+          type: ASTNodeType.StringLiteral,
+          value: this.currentToken.value
+        })
+        this.advance();
+      }
+    }
+
+    return {
+      type: ASTNodeType.List,
+      value: items
+    }
   }
 
   parseProcedureCall = (): ASTProcedureNode => {
@@ -222,6 +248,9 @@ export default class Parser {
         break;
       case TokenType.LPAREN:
         left = this.parseGroup()
+        break;
+      case TokenType.LBRACKET:
+        left = this.parseList()
         break;
       case TokenType.PROCEDURE:
         if (`${this.currentToken.value}`.toLowerCase() === "to") {
