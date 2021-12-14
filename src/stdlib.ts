@@ -18,16 +18,41 @@ function unimplemented() {
   throw new Error('Function unimplemented.')
 }
 
-function getListString(list: ASTNode[]) {
-  let listStr = '['
-  list.forEach(entry => {
-    if (entry.type === ASTNodeType.List) {
-      listStr += getListString(entry.value as ASTNode[])
-    } else {
-      listStr += entry.value + ' '
-    }
-  })
-  return listStr + '] ';
+export function getListString(list: ASTNode[]): string {
+  console.log(list);
+
+  return '[' + list.map(entry => entry.type === ASTNodeType.List ? getListString(entry.value as ASTNode[]) : entry.value).join(' ') + ']';
+}
+
+
+
+const word = (...args: any[]) => {
+  checkInputs('word', 2, args)
+  return args.join("")
+}
+
+const list = unimplemented;
+
+const sentence =  unimplemented;
+
+const fput = (...args: any[]) => {
+  if (Array.isArray(args[1])) {
+    return [
+      { type: Array.isArray(args[0]) ? ASTNodeType.List : ASTNodeType.StringLiteral, value: args[0]},
+      ...args[1]
+    ]
+  }
+  word(args)
+}
+
+const lput = (...args: any[]) => {
+  if (Array.isArray(args[1])) {
+    return [
+      ...args[1],
+      { type: Array.isArray(args[0]) ? ASTNodeType.List : ASTNodeType.StringLiteral, value: args[0]},
+    ]
+  }
+  return word(args.reverse())
 }
 
 export default function registerPrimitives(env: Environment) {
@@ -35,15 +60,12 @@ export default function registerPrimitives(env: Environment) {
 
     /** 2 Data Structure Primitives */
     // 2.1 Constructors
-    word: (...args) => {
-      checkInputs('word', 2, args)
-      return args.join("")
-    },
+    word,
+    list,
+    sentence,
+    fput,
+    lput,
 
-    list: unimplemented,
-    sentence: unimplemented,
-    fput: unimplemented,
-    lput: unimplemented,
     array: unimplemented,
     mdarray: unimplemented,
     listtoarray: unimplemented,

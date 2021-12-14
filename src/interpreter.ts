@@ -1,6 +1,6 @@
 import { TokenType } from "./lexer";
 import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
-import registerPrimitives from "./stdlib";
+import registerPrimitives, { getListString } from "./stdlib";
 
 export class Environment {
   parent: Environment;
@@ -104,10 +104,12 @@ export function evaluate(exp: ASTNode, env: Environment): any {
       // probably should be a foreach
       const returnVal = (exp as ASTProgramNode).program.map(exp => evaluate(exp, env))
       // all return vals should be undefined; procedures shoudl use all variables
-      const unknownVal = returnVal.flatMap(x => x).find(x => x !== undefined);
+      const unknownVal = returnVal.map(x => x).find(x => x !== undefined);
 
       if (unknownVal) {
-        // TODO: this is unhelpful for lists
+        if (Array.isArray(unknownVal)) {
+          throw new Error(`You don't say what to do with ${getListString(unknownVal)}`);
+        }
         throw new Error(`You don't say what to do with ${unknownVal}`);
       }
       return returnVal;
