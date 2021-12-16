@@ -97,6 +97,7 @@ export function evaluate(exp: ASTNode, env: Environment): any {
     // for literals and lists, just return the value
     case ASTNodeType.StringLiteral:
     case ASTNodeType.NumberLiteral:
+    case ASTNodeType.Boolean:
     case ASTNodeType.List:
       return exp.value;
     // for programs, evaluate each of the expressions in them in them

@@ -27,6 +27,7 @@ export enum ASTNodeType {
   ProcedureDefinition = 'ProcedureDefinition',
   NumberLiteral = "NumberLiteral",
   StringLiteral = "StringLiteral",
+  Boolean = "Boolean",
   InfixOperation = "InfixOperation",
   Variable = "Variable",
   Assignment = "Assignment",
@@ -36,7 +37,7 @@ export enum ASTNodeType {
 
 export type ASTNode = {
   type: ASTNodeType;
-  value?: string | number | ASTNode | ASTNode[];
+  value?: string | number | boolean | ASTNode | ASTNode[];
 }
 
 export type ASTProgramNode = ASTNode & {
@@ -115,6 +116,12 @@ export default class Parser {
   parseNumber = (): ASTNode => ({
     type: ASTNodeType.NumberLiteral,
     value: this.currentToken.value
+  })
+
+  parseBoolean = (): ASTNode => ({
+    type: ASTNodeType.Boolean,
+    // we may need to retain case so this might be done in the interpreter
+    value: /^true$/i.test(this.currentToken.value as string)
   })
 
   parseString = (): ASTNode => ({
@@ -255,6 +262,10 @@ export default class Parser {
       case TokenType.PROCEDURE:
         if (`${this.currentToken.value}`.toLowerCase() === "to") {
           left = this.parseProcedureDefinition();
+          break;
+        }
+        if (/^(true|false)$/i.test(this.currentToken.value as string)) {
+          left = this.parseBoolean();
           break;
         }
         // variable assignment is just a special primitive procedure, "make"
