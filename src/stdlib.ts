@@ -24,8 +24,6 @@ export function getListString(list: ASTNode[]): string {
   return '[' + list.map(entry => entry.type === ASTNodeType.List ? getListString(entry.value as ASTNode[]) : entry.value).join(' ') + ']';
 }
 
-
-
 const word = (...args: any[]) => {
   checkInputs('word', 2, args)
   return args.join("")
@@ -106,7 +104,9 @@ export default function registerPrimitives(env: Environment) {
     listp: unimplemented,
     arrayp: unimplemented,
     emptyp: unimplemented,
-    equalp: unimplemented,
+    equalp: (...args) => {
+      return args[0] === args[1]
+    },
     notequalp: unimplemented,
     beforep: unimplemented,
     '.eq': unimplemented,
@@ -152,11 +152,40 @@ export default function registerPrimitives(env: Environment) {
       checkInputs('make', 2, args, 'number')
       return args[0] - args[1];
     },
-    // sum: (...args) => {
-    //   checkInputs('make', 2, args, 'number')
-    //   return args[0] + args[1];
-    // },
 
+    // 5.5 Bitwise Operations
+    // bitand or xor not should work w multiple
+    bitand: (...args) => {
+      return args.reduce((acc, curr) => {
+        acc = acc & curr
+        return acc;
+      });
+    },
+    bitor: (...args) => {
+      return args.reduce((acc, curr) => {
+        acc = acc | curr
+        return acc;
+      });
+    },
+    bitxor: (...args) => {
+      return args.reduce((acc, curr) => {
+        acc = acc ^ curr
+        return acc;
+      });
+    },
+    bitnot: (...args) => {
+      checkInputs('bitnot', 1, args, 'number')
+      return ~ args[0];
+    },
+    // this is wrong
+    ashift: (...args) => {
+      checkInputs('ashift', 2, args, 'number')
+      return args[0] << args[1];
+    },
+    lshift: (...args) => {
+      checkInputs('lshift', 2, args, 'number')
+      return args[0] << args[1];
+    },
     // ??
 
     'make': (...args: any[]) => {
@@ -177,4 +206,11 @@ export default function registerPrimitives(env: Environment) {
   Object.entries(stdlib).forEach(
     ([funcName, func]) => env.defineProcedure(funcName, func)
   );
+
+  // alias predicates, e.g. wordp --> word?
+  qmarkAliases.forEach(toAlias => {
+    const func = stdlib[toAlias];
+    const alias = toAlias.slice(0, -1) + '?';
+    env.defineProcedure(alias, func);
+  })
 }

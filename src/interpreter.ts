@@ -56,7 +56,7 @@ export class Environment {
   }
 
   getProcedure = (name: string) => {
-    if (this.procedures.has(name)) return this.procedures.get(name);
+    if (this.procedures.has(name.toLowerCase())) return this.procedures.get(name.toLowerCase());
     throw new Error(`I don't know how to ${name}`);
   }
 }
