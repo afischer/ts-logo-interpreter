@@ -172,6 +172,9 @@ export default class Parser {
     }
   }
 
+  // ok actually we need to modify this as it should only use as many args as it
+  // needs during the interpretation phase, except for if it's in a group, in
+  // which case it should take all the args within the group
   parseProcedureCall = (): ASTProcedureNode => {
     const token = this.currentToken;
     const args: ASTNode[] = [];
