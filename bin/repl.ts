@@ -9,9 +9,6 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const replEnv = new Environment();
-
-
 async function getLine(query: string) {
   return new Promise(resolve => rl.question(query, ans => {
     resolve(ans);
@@ -30,6 +27,9 @@ const getFullInput = async (endWord: string) => {
   return full;
 }
 
+const replEnv = new Environment();
+const parser = new Parser();
+
 const run = () => {
 
   rl.question('logo > ', async (input) => {
@@ -43,9 +43,8 @@ const run = () => {
       console.log(lexed);
 
       console.log('Parsed AST:')
-      const parser = new Parser(lexed);
 
-      const ast = parser.parse();
+      const ast = parser.parse(lexed);
       console.log(JSON.stringify(ast, null, 2))
 
       evaluate(ast, replEnv);

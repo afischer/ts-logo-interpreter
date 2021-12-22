@@ -125,10 +125,10 @@ export default function registerPrimitives(env: Environment) {
     /** 4 Communication */
     // 4.1 Transmitters
     print: (...args) => {
-      if (Array.isArray(args[0])) {
-        process.stdout.write(getListString(args[0]) + '\n')
-        return;
-      }
+      // if (Array.isArray(args[0])) {
+      //   process.stdout.write(getListString(args[0]) + '\n')
+      //   return;
+      // }
       process.stdout.write(args + '\n')
       return;
     },

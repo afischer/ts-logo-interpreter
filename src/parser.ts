@@ -72,17 +72,21 @@ const InfixOperators = new Set([
 ])
 
 export default class Parser {
-  tokens: Token[];
+  tokens: Token[] = [];
   currentToken: Token;
-  tokenCount: number;
   index = 0;
 
+  procedureArgCounts: Map<string, number> = new Map();
 
+  get tokenCount() {
+    return this.tokens.length
+  }
 
-  constructor(tokens: Token[]) {
-    this.tokens = tokens;
+  constructor() {
     this.currentToken = this.tokens[this.index];
-    this.tokenCount = tokens.length;
+
+    // todo: for entire stdlib
+    this.procedureArgCounts.set("print", 1)
   }
 
   advance = () => {
@@ -190,11 +194,21 @@ export default class Parser {
       }
     }
 
-    this.advance()
-    while (this.currentToken.type !== TokenType.NEWLINE && this.currentToken.type !== TokenType.EOF) {
-      args.push(this.parseExpression())
+
+    // otherwise pull args:
+    const argCount = this.procedureArgCounts.get(token.value as string)
+    while (
+      args.length !== argCount &&
+      this.currentToken.type !== TokenType.NEWLINE &&
+      this.currentToken.type !== TokenType.EOF
+    ) {
       this.advance()
+      args.push(this.parseExpression())
+      console.log('args now', args, 'looking for ', argCount, this.procedureArgCounts, 'for', token.value);
+
     }
+    this.advance()
+
     // TODO: deal with weird comma syntax in logo - I think they CAN be used but arent usually
     return {
       type: ASTNodeType.ProcedureCall,
@@ -216,7 +230,7 @@ export default class Parser {
     // TODO: Optional args, REST args, default number
     while (this.currentToken.type === TokenType.VARIABLE) {
       vars.push(this.parseExpression())
-      this.advance();
+      if (this.currentToken.type === TokenType.VARIABLE) this.advance();
     }
 
     let finishedParsing = false;
@@ -230,6 +244,9 @@ export default class Parser {
       this.advance();
     }
 
+    // set arg count for parsing calls
+    this.procedureArgCounts.set(procedureToken.value as string, vars.length);
+console.log('>>>>> PROCEDURE ARG COUNTS', this.procedureArgCounts)
     return {
       type: ASTNodeType.ProcedureDefinition,
       value: procedureToken.value,
@@ -296,22 +313,25 @@ export default class Parser {
   }
 
 
-  // parseStatement = (): ASTNode => {
-  //   // TODO: assignment expression
-  //   return this.parseBinary()
-  // }
+  program: ASTNode[] = [];
 
-  parse = (): ASTProgramNode => {
-    const program: ASTNode[] = [];
+  parse = (tokens: Token[]): ASTProgramNode => {
+    // this.tokens.push(...tokens);
+    // console.log('current index is', this.index)
+    // this.currentToken = this.tokens[this.index];
+    this.program = []; // this might be dangerous when parsing files?? maybe??
+    this.tokens = tokens;
+    this.index = 0;
+    this.currentToken = this.tokens[this.index];
 
     while (this.currentToken.type !== TokenType.EOF) {
-      program.push(this.parseExpression());
+      this.program.push(this.parseExpression());
       this.advance();
     }
 
     return {
       type: ASTNodeType.Program,
-      program: program
+      program: this.program
     }
   }
 }

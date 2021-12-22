@@ -105,9 +105,11 @@ export function evaluate(exp: ASTNode, env: Environment): any {
       // probably should be a foreach
       const returnVal = (exp as ASTProgramNode).program.map(exp => evaluate(exp, env))
       // all return vals should be undefined; procedures shoudl use all variables
-      const unknownVal = returnVal.map(x => x).find(x => x !== undefined);
+      const unknownVal = returnVal.flatMap(x => x).find(x => x !== undefined);
 
       if (unknownVal) {
+        console.log('unknown val', unknownVal);
+
         if (Array.isArray(unknownVal)) {
           throw new Error(`You don't say what to do with ${getListString(unknownVal)}`);
         }
