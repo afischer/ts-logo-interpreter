@@ -1,28 +1,8 @@
 import { Environment } from "./interpreter";
 import { ASTNode, ASTNodeType } from "./parser";
+import { unimplemented, checkInputs } from "./stdlib/util";
 
-function checkInputs(funcName: string, exact: number, args: any[], type?: string) {
-  if (args.length < exact) {
-    throw new Error(`Not enough inputs for ${funcName}`);
-  }
-  if (type) {
-    args.forEach(arg => {
-      if (typeof arg !== type) {
-        throw new Error(`${funcName} doesn't like ${arg} as input`);
-      }
-    })
-  }
-}
 
-function unimplemented() {
-  throw new Error('Function unimplemented.')
-}
-
-export function getListString(list: ASTNode[]): string {
-  console.log(list);
-
-  return '[' + list.map(entry => entry.type === ASTNodeType.List ? getListString(entry.value as ASTNode[]) : entry.value).join(' ') + ']';
-}
 
 const word = (...args: any[]) => {
   checkInputs('word', 2, args)

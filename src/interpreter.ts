@@ -1,7 +1,7 @@
 import { TokenType } from "./lexer";
 import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
-import registerPrimitives, { getListString } from "./stdlib";
-
+import {registerPrimitives} from "./stdlib";
+import { getListString } from "./stdlib/util";
 export class Environment {
   parent: Environment;
   vars: Map<string, any> = new Map();

@@ -1,4 +1,5 @@
 import { BinaryTokenType, Token, TokenType } from "./lexer";
+import { procedureArgCounts } from "./stdlib";
 
 const getPrecedence = (type: TokenType) => {
   switch (type) {
@@ -76,7 +77,8 @@ export default class Parser {
   currentToken: Token;
   index = 0;
 
-  procedureArgCounts: Map<string, number> = new Map();
+  // start with stdlib procedureArgCounts, all defined procedures will be added
+  procedureArgCounts: Map<string, number> = procedureArgCounts;
 
   get tokenCount() {
     return this.tokens.length
@@ -84,9 +86,6 @@ export default class Parser {
 
   constructor() {
     this.currentToken = this.tokens[this.index];
-
-    // todo: for entire stdlib
-    this.procedureArgCounts.set("print", 1)
   }
 
   advance = () => {
@@ -204,10 +203,7 @@ export default class Parser {
     ) {
       this.advance()
       args.push(this.parseExpression())
-      console.log('args now', args, 'looking for ', argCount, this.procedureArgCounts, 'for', token.value);
-
     }
-    this.advance()
 
     // TODO: deal with weird comma syntax in logo - I think they CAN be used but arent usually
     return {
