@@ -1,13 +1,20 @@
 import { Environment } from "../interpreter";
-import WorkspaceManagementPrimitives from "./8workspaceManagement";
 import DataStructPrimitives from "./2dataStructPrimitives";
 import CommunicationPrimitives from "./4communicationPrimitives";
 import ArithmeticPrimitives from "./5arithmetic";
 import LogicalPrimitives from "./6logic";
-import StdlibInterface from "./StdlibInterface";
+import WorkspaceManagementPrimitives from "./8workspaceManagement";
+import ControlStructurePrimitives from "./9controlStructures";
 
 
-const primitives = [WorkspaceManagementPrimitives, DataStructPrimitives, CommunicationPrimitives, ArithmeticPrimitives, LogicalPrimitives];
+const primitives = [
+  WorkspaceManagementPrimitives,
+  DataStructPrimitives,
+  CommunicationPrimitives,
+  ArithmeticPrimitives,
+  LogicalPrimitives,
+  ControlStructurePrimitives
+];
 
 // export mega list of argument counts
 export const procedureArgCounts: Map<string, number> = primitives.reduce((acc, {procedureArgCounts}) => {

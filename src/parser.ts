@@ -33,6 +33,7 @@ export enum ASTNodeType {
   Variable = "Variable",
   Assignment = "Assignment",
   List = "List",
+  Conditional = "Conditional",
 }
 
 
@@ -57,6 +58,12 @@ export type ASTProcedureDefNode = ASTNode & {
 
 export type ASTProcedureNode = ASTNode & {
   args: ASTNode[]
+}
+
+export type ASTConditionalNode = ASTNode & {
+  condition: ASTNode[];
+  then: ASTNode[];
+  else: ASTNode[];
 }
 
 const InfixOperators = new Set([
@@ -272,6 +279,22 @@ export default class Parser {
     }
   }
 
+  // parseConditional = (): ASTConditionalNode => {
+
+  //   if (/^(if)$/i.test(this.currentToken.value as string)) {
+  //     // if statment
+  //   } else if (/^(ifelse)$/i.test(this.currentToken.value as string)) {
+  //     // if statment
+  //   }
+
+  //   return {
+  //     type: ASTNodeType.Conditional,
+  //     condition,
+  //     then,
+  //     else
+  //   }
+  // }
+
   parseExpression = (precedence = 0): ASTNode => {
     console.log('parsing expression, current is', this.currentToken);
 
@@ -302,6 +325,10 @@ export default class Parser {
           left = this.parseBoolean();
           break;
         }
+        // if (/^(if)$/i.test(this.currentToken.value as string)) {
+        //   left = this.parseConditional();
+        //   break;
+        // }
         // variable assignment is just a special primitive procedure, "make"
         left = this.parseProcedureCall();
         break;

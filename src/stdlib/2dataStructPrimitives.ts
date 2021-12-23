@@ -145,10 +145,12 @@ type Procedures =
   procedureDefs = {
     // 2.1 Constructors
     word: (...args: any[]) => {
+      if (args.length < 2) throw new Error("Not enough inputs to word")
       return args.join("")
     },
     list: unimplemented,
     sentence: (...args: any[]) => {
+      if (args.length < 2) throw new Error("Not enough inputs to sentence")
       return args.reduce((acc, curr) => {
         if (Array.isArray(curr)) {
           acc.push(...curr)

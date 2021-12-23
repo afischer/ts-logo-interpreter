@@ -131,66 +131,63 @@ export default function lex(input: string): Token[] {
       advance();
     } else if (currentChar === '~') {
       // advance past this character and the newline
-      console.log('advancing past', currentChar)
-      advance();
-      console.log('advancing past', currentChar)
-      advance();
-      console.log('landed at', currentChar)
+      advanceLine();
+      // TODO: maybe need to advance one more to get past the \n?
     } else if (currentChar === '+') {
-      tokens.push({ type: TokenType.PLUS })
+      tokens.push({ type: TokenType.PLUS, value: currentChar })
       advance();
       // TODO: deal with negative numbers
     } else if (currentChar === '-') {
-      tokens.push({ type: TokenType.MINUS })
+      tokens.push({ type: TokenType.MINUS, value: currentChar })
       advance();
     } else if (currentChar === '*') {
-      tokens.push({ type: TokenType.MULTIPLY })
+      tokens.push({ type: TokenType.MULTIPLY, value: currentChar })
       advance();
     } else if (currentChar === '/') {
-      tokens.push({ type: TokenType.DIVIDE })
+      tokens.push({ type: TokenType.DIVIDE, value: currentChar })
       advance();
     } else if (currentChar === '(') {
-      tokens.push({ type: TokenType.LPAREN })
+      tokens.push({ type: TokenType.LPAREN, value: currentChar })
       advance();
     } else if (currentChar === ')') {
-      tokens.push({ type: TokenType.RPAREN })
+      tokens.push({ type: TokenType.RPAREN, value: currentChar })
       advance();
     } else if (currentChar === '[') {
-      tokens.push({ type: TokenType.LBRACKET })
+      tokens.push({ type: TokenType.LBRACKET, value: currentChar })
       advance();
     } else if (currentChar === ']') {
-      tokens.push({ type: TokenType.RBRACKET })
+      tokens.push({ type: TokenType.RBRACKET, value: currentChar })
       advance();
     } else if (currentChar === '{') {
-      tokens.push({ type: TokenType.LBRACE })
+      tokens.push({ type: TokenType.LBRACE, value: currentChar })
       advance();
     } else if (currentChar === '}') {
-      tokens.push({ type: TokenType.RBRACE })
+      tokens.push({ type: TokenType.RBRACE, value: currentChar })
       advance();
     } else if (currentChar === ';') {
       tokens.push({ type: TokenType.SEMICOLON })
       advanceLine();
     } else if (currentChar === '<') { // comparitors
       if (peek() === '>') {
-        tokens.push({ type: TokenType.NEQ })
+        tokens.push({ type: TokenType.NEQ, value: '<>' })
         advance(); // extra advance
       } else if (peek() === '=') {
-        tokens.push({ type: TokenType.LEQ })
+        tokens.push({ type: TokenType.LEQ, value: '<=' })
         advance(); // extra advance
       } else {
-        tokens.push({ type: TokenType.LT })
+        tokens.push({ type: TokenType.LT, value: currentChar })
       }
       advance();
     } else if (currentChar === '>') {
       if (peek() === '=') {
-        tokens.push({ type: TokenType.GEQ })
+        tokens.push({ type: TokenType.GEQ, value: '>=' })
         advance(); // extra advance
       } else {
-        tokens.push({ type: TokenType.GT })
+        tokens.push({ type: TokenType.GT, value: currentChar })
       }
       advance();
     } else if (currentChar === '=') {
-      tokens.push({ type: TokenType.EQL })
+      tokens.push({ type: TokenType.EQL, value: currentChar })
       advance();
     } else if (/\d|\./.test(currentChar)) { // numbers
       tokens.push(tokenizeNumber())
