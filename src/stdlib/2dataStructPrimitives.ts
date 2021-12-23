@@ -8,6 +8,7 @@ type Procedures =
 'word'
  | 'list'
  | 'sentence'
+ | 'se'
  | 'fput'
  | 'lput'
  | 'array'
@@ -77,6 +78,7 @@ type Procedures =
     word: 2,
     list: 2,
     sentence: 2,
+    se: 2,
     fput: 2,
     lput: 2,
     array: 1,
@@ -146,7 +148,19 @@ type Procedures =
       return args.join("")
     },
     list: unimplemented,
-    sentence: unimplemented,
+    sentence: (...args: any[]) => {
+      return args.reduce((acc, curr) => {
+        if (Array.isArray(curr)) {
+          console.log('>>>>>', curr, args);
+
+          acc.push(...curr)
+          return acc;
+        }
+        acc.push({type: ASTNodeType.StringLiteral, value: curr})
+        return acc;
+      }, [])
+    },
+    se: unimplemented, // actually implemented above
     fput: (...args: any[]) => {
       if (Array.isArray(args[1])) {
         return [

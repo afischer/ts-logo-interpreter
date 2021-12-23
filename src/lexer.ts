@@ -168,7 +168,7 @@ export default function lex(input: string): Token[] {
       tokens.push({ type: TokenType.RBRACE })
       advance();
     } else if (currentChar === ';') {
-      tokens.push({ type: TokenType.SEMICOLON })
+      // tokens.push({ type: TokenType.SEMICOLON })
       advanceLine();
     } else if (currentChar === '<') { // comparitors
       if (peek() === '>') {
