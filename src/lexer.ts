@@ -105,7 +105,12 @@ export default function lex(input: string): Token[] {
     let value = currentChar; // type === TokenType.PROCEDURE ? currentChar : '';
     advance();
 
-    while (currentChar && /\w|\.|\?/.test(currentChar)) {
+    while (currentChar && /\w|\.|\?|'|\\/.test(currentChar)) {
+      // if current character is a backslash, advance and take the next char verbatim
+      // NB: this seems wrong
+      if (currentChar === '\\') {
+        advance()
+      }
       value += currentChar;
       advance()
     }
@@ -124,6 +129,13 @@ export default function lex(input: string): Token[] {
       advance();
     } else if (/\s/.test(currentChar)) {
       advance();
+    } else if (currentChar === '~') {
+      // advance past this character and the newline
+      console.log('advancing past', currentChar)
+      advance();
+      console.log('advancing past', currentChar)
+      advance();
+      console.log('landed at', currentChar)
     } else if (currentChar === '+') {
       tokens.push({ type: TokenType.PLUS })
       advance();
@@ -182,7 +194,7 @@ export default function lex(input: string): Token[] {
       advance();
     } else if (/\d|\./.test(currentChar)) { // numbers
       tokens.push(tokenizeNumber())
-    } else if (/"|:|\?|\w/.test(currentChar)) { // words
+    } else if (/"|:|\?|\w|'|\\/.test(currentChar)) { // words
       tokens.push(tokenizeWord())
     } else {
       throw new Error(`Error on line ${pos.row}:${pos.col}\nUnknown token ${currentChar}`)

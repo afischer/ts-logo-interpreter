@@ -211,7 +211,12 @@ export default class Parser {
 
 
     // otherwise pull args:
-    const argCount = this.procedureArgCounts.get(token.value as string)
+    const argCount = this.procedureArgCounts.get(`${token.value}`.toLowerCase())
+    if (!argCount) {
+      throw new Error(`Could not determine argument count for ${token.value}`);
+
+    }
+
     while (
       args.length !== argCount &&
       this.currentToken.type !== TokenType.NEWLINE &&
