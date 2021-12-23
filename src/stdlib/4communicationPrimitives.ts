@@ -35,7 +35,7 @@ export default class CommunicationPrimitives implements StdlibInterface<Procedur
       //   process.stdout.write(getListString(args[0]) + '\n')
       //   return;
       // }
-      process.stdout.write(args + '\n')
+      process.stdout.write(args.join(" ") + '\n')
       return;
     },
     type: unimplemented,

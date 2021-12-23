@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "logo": "ts-node ./src/index.ts",
     "repl": "ts-node ./bin/repl.ts"
   },
   "author": "",

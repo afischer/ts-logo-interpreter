@@ -142,12 +142,28 @@ export default class Parser {
   parseGroup = (): ASTNode => {
     // advance past the lparen
     this.advance();
-    const expr = this.parseExpression();
-    if (this.peek().type !== TokenType.RPAREN) {
-      throw new Error('Missing closing parentheses on expression')
+    // groups in logo act like a lisp, not like a standard grouping. The first
+    // entry is considered to be a function call, the remainder its args. It is
+    // up to the interpreter to decide whether the number of args is valid.
+    const node: ASTProcedureNode = {
+      type: ASTNodeType.ProcedureCall,
+      value: this.currentToken.value,
+      args: []
     }
+
+    // advance past procedure name
+    this.advance();
+
+    while (this.currentToken.type !== TokenType.RPAREN) {
+      const exp = this.parseExpression()
+      console.log('GOT', exp)
+      node.args.push(exp)
+      this.advance();
+      // throw new Error('Missing closing parentheses on expression')
+    }
+    // advance past rparen
     this.advance()
-    return expr;
+    return node;
   }
 
   parseList = (): ASTNode => {
