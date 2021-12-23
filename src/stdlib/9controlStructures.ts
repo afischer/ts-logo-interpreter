@@ -8,6 +8,7 @@ type Procedures =
 "run"
 | "repeat"
 | "ifelse"
+| "foreach"
 
 type ConditionalFuncArgs = {
   condition: boolean,
@@ -23,7 +24,8 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
   static procedureArgCounts: Record<Procedures, number> = {
     run: 1,
     repeat: 2,
-    ifelse: -1 // this is a special case, but need to make the compiler happy
+    ifelse: -1, // this is a special case, but need to make the compiler happy
+    foreach: 2,
   }
 
   // pull this out as it's likely to be reused a number of times in these
@@ -50,6 +52,25 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
       } else {
         this.run((elseDo.value as ASTNode[]).map(x => x.value))
       }
+    },
+
+    // TODO: deal with ?REST
+    foreach: (...args: any[]) => {
+      const data = args[0];
+      const template = args[1];
+
+      // if data is a string, split into characters, otherwise just use array
+      [...data].forEach((val, i) => {
+        // replace ? with val, # with index
+        const toRun = template.map((x: string) =>  {
+          // double escape strings/vars as they should print with " or :
+          if (x === '?') return /^"(|:)/.test(val) ? `"${val}` : val
+          if (x === '#') return i
+          return x;
+        })
+
+        this.run(toRun)
+      })
     }
   }
 
