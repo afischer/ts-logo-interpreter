@@ -4,9 +4,9 @@ export function unimplemented() {
   throw new Error('Function unimplemented.')
 }
 
-export function getListString(list: ASTNode[]): string {
+export function listStringFromASTNode(list: ASTNode[]): string {
   return '[' + list.map(entry => entry.type === ASTNodeType.List
-    ? getListString(entry.value as ASTNode[])
+    ? listStringFromASTNode(entry.value as ASTNode[])
     : entry.value).join(' ') + ']';
 }
 

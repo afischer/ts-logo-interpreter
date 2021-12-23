@@ -1,7 +1,7 @@
 import { TokenType } from "./lexer";
 import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
 import {registerPrimitives} from "./stdlib";
-import { getListString } from "./stdlib/util";
+import { listStringFromASTNode } from "./stdlib/util";
 export class Environment {
   parent: Environment;
   vars: Map<string, any> = new Map();
@@ -100,8 +100,7 @@ export function evaluate(exp: ASTNode, env: Environment): any {
     case ASTNodeType.Boolean:
       return exp.value;
     case ASTNodeType.List:
-      // return (exp.value as Array<ASTNode>).map(x => x.value)
-      return exp.value;
+      return (exp.value as Array<ASTNode>).map(x => x.value)
     // for programs, evaluate each of the expressions in them in them
     case ASTNodeType.Program:
       // probably should be a foreach
@@ -113,7 +112,7 @@ export function evaluate(exp: ASTNode, env: Environment): any {
         console.log('unknown val', unknownVal);
 
         if (Array.isArray(unknownVal)) {
-          throw new Error(`You don't say what to do with ${getListString(unknownVal)}`);
+          throw new Error(`You don't say what to do with ${listStringFromASTNode(unknownVal)}`);
         }
         throw new Error(`You don't say what to do with ${unknownVal}`);
       }

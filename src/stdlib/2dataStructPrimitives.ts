@@ -151,32 +151,20 @@ type Procedures =
     sentence: (...args: any[]) => {
       return args.reduce((acc, curr) => {
         if (Array.isArray(curr)) {
-          console.log('>>>>>', curr, args);
-
           acc.push(...curr)
           return acc;
         }
-        acc.push({type: ASTNodeType.StringLiteral, value: curr})
+        acc.push(curr)
         return acc;
       }, [])
     },
     se: unimplemented, // actually implemented above
     fput: (...args: any[]) => {
-      if (Array.isArray(args[1])) {
-        return [
-          { type: Array.isArray(args[0]) ? ASTNodeType.List : ASTNodeType.StringLiteral, value: args[0]},
-          ...args[1]
-        ]
-      }
-      args.join('')
+      if (Array.isArray(args[1])) { return [args[0], ...args[1]] }
+      return args.join('')
     },
     lput: (...args: any[]) => {
-      if (Array.isArray(args[1])) {
-        return [
-          ...args[1],
-          { type: Array.isArray(args[0]) ? ASTNodeType.List : ASTNodeType.StringLiteral, value: args[0]},
-        ]
-      }
+      if (Array.isArray(args[1])) { return [...args[1], args[0]] }
       return args.reverse().join("")
     },
     array: unimplemented,

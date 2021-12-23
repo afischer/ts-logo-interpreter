@@ -155,11 +155,8 @@ export default class Parser {
     this.advance();
 
     while (this.currentToken.type !== TokenType.RPAREN) {
-      const exp = this.parseExpression()
-      console.log('GOT', exp)
-      node.args.push(exp)
+      node.args.push(this.parseExpression())
       this.advance();
-      // throw new Error('Missing closing parentheses on expression')
     }
     // advance past rparen
     this.advance()
@@ -263,7 +260,7 @@ export default class Parser {
 
     // set arg count for parsing calls
     this.procedureArgCounts.set(procedureToken.value as string, vars.length);
-console.log('>>>>> PROCEDURE ARG COUNTS', this.procedureArgCounts)
+
     return {
       type: ASTNodeType.ProcedureDefinition,
       value: procedureToken.value,
@@ -310,6 +307,7 @@ console.log('>>>>> PROCEDURE ARG COUNTS', this.procedureArgCounts)
         break;
 
       case TokenType.NEWLINE:
+      case TokenType.SEMICOLON:
         break;
 
       default:

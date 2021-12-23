@@ -1,12 +1,19 @@
 import { Environment } from "../interpreter";
 import { ASTNodeType } from "../parser";
 import StdlibInterface from "./StdlibInterface";
-import { checkInputs, getListString, unimplemented } from "./util";
+import { checkInputs, listStringFromASTNode, unimplemented } from "./util";
 
 type Procedures =
   "print"
 | "type"
 | "show"
+
+
+function getListString(list: Array<any>): string {
+  return '[' + list.map(entry => Array.isArray(entry)
+    ? getListString(entry)
+    : entry).join(' ') + ']';
+}
 
 /** 4 Communication */
 export default class CommunicationPrimitives implements StdlibInterface<Procedures> {
@@ -32,13 +39,13 @@ export default class CommunicationPrimitives implements StdlibInterface<Procedur
   procedureDefs = {
     // 4.1 Transmitters
     print: (...args: any[]) => {
-      console.log('FOR PRINT', args);
-
       if (Array.isArray(args[0])) {
-        process.stdout.write(args[0].map(x => x.type === ASTNodeType.List
-          ? getListString(x.value)
-          : x.value
-        ).join(" ") + '\n');
+        process.stdout.write(
+          '[' +
+          args[0].map(x => Array.isArray(x)
+            ? getListString(x)
+            : x
+        ).join(" ") + ']\n');
         return;
       }
       process.stdout.write(args.join(" ") + '\n')
