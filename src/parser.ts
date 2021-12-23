@@ -61,9 +61,9 @@ export type ASTProcedureNode = ASTNode & {
 }
 
 export type ASTConditionalNode = ASTNode & {
-  condition: ASTNode[];
-  then: ASTNode[];
-  else: ASTNode[];
+  condition: ASTNode;
+  then: ASTNode;
+  else: ASTNode;
 }
 
 const InfixOperators = new Set([
@@ -279,21 +279,39 @@ export default class Parser {
     }
   }
 
-  // parseConditional = (): ASTConditionalNode => {
+  parseConditional = (): ASTConditionalNode => {
+    let condition: ASTNode;
+    let thenDo: ASTNode;
+    let elseDo: ASTNode;
 
-  //   if (/^(if)$/i.test(this.currentToken.value as string)) {
-  //     // if statment
-  //   } else if (/^(ifelse)$/i.test(this.currentToken.value as string)) {
-  //     // if statment
-  //   }
+    const ifelseKeyword = this.currentToken.value as string;
+    // advance past keyword
+    this.advance();
 
-  //   return {
-  //     type: ASTNodeType.Conditional,
-  //     condition,
-  //     then,
-  //     else
-  //   }
-  // }
+    if (/^(ifelse)$/i.test(ifelseKeyword)) {
+      // if statment
+      console.log('> AT TOKEN', this.currentToken)
+      condition = this.parseExpression();
+      this.advance()
+      console.log('> AFTER COND', this.currentToken)
+      thenDo = this.parseExpression();
+      this.advance()
+      console.log('> AFTER THEN', this.currentToken)
+      elseDo = this.parseExpression();
+      console.log('> AFTER ELSE', this.currentToken)
+    }
+    // } else if (/^(ifelse)$/i.test(this.currentToken.value as string)) {
+    //   // if statment
+    // }
+
+    return {
+      type: ASTNodeType.Conditional,
+      value: ifelseKeyword,
+      condition,
+      then: thenDo,
+      else: elseDo
+    }
+  }
 
   parseExpression = (precedence = 0): ASTNode => {
     console.log('parsing expression, current is', this.currentToken);
@@ -325,10 +343,10 @@ export default class Parser {
           left = this.parseBoolean();
           break;
         }
-        // if (/^(if)$/i.test(this.currentToken.value as string)) {
-        //   left = this.parseConditional();
-        //   break;
-        // }
+        if (/^(ifelse)$/i.test(this.currentToken.value as string)) {
+          left = this.parseConditional();
+          break;
+        }
         // variable assignment is just a special primitive procedure, "make"
         left = this.parseProcedureCall();
         break;

@@ -1,5 +1,5 @@
 import { TokenType } from "./lexer";
-import { ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
+import { ASTConditionalNode, ASTInfixNode, ASTNode, ASTNodeType, ASTProcedureDefNode, ASTProcedureNode, ASTProgramNode } from "./parser";
 import {registerPrimitives} from "./stdlib";
 import { listStringFromASTNode } from "./stdlib/util";
 export class Environment {
@@ -133,6 +133,19 @@ export function evaluate(exp: ASTNode, env: Environment): any {
 
     case ASTNodeType.ProcedureDefinition:
       return evaluateProcedureDefinition(exp as ASTProcedureDefNode, env)
+
+    // send as a function call to the stdlib, but with a different method signature
+    case ASTNodeType.Conditional:
+      const conditionalNode = exp as ASTConditionalNode;
+      const condition = evaluate(conditionalNode.condition, env)
+      console.log(condition);
+
+      const ifFunc = env.getProcedure(exp.value as string)
+      return ifFunc({
+        condition,
+        thenDo: conditionalNode.then,
+        elseDo: conditionalNode.else,
+      })
 
     case ASTNodeType.ProcedureCall:
       const func = env.getProcedure(exp.value as string);
