@@ -46,6 +46,7 @@ type Procedures =
  | 'listp'
  | 'arrayp'
  | 'emptyp'
+ | 'empty?'
  | 'equalp'
  | 'notequalp'
  | 'beforep'
@@ -119,6 +120,7 @@ type Procedures =
     listp: 1,
     arrayp: 1,
     emptyp: 1,
+    'empty?': 1,
     equalp: 2,
     notequalp: 2,
     beforep: 2,
@@ -209,7 +211,10 @@ type Procedures =
     wordp: unimplemented,
     listp: unimplemented,
     arrayp: unimplemented,
-    emptyp: unimplemented,
+    emptyp: (...args: any[]) => {
+      return args[0].length > 0
+    },
+    'empty?': unimplemented, // not really
     equalp: (...args: any[]) => {
       return args[0] === args[1]
     },

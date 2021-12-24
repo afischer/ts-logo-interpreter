@@ -9,6 +9,9 @@ export class Environment {
 
   constructor(parent?: Environment) {
     this.parent = parent
+    if (parent) {
+      this.procedures = parent.procedures;
+    }
 
     registerPrimitives(this)
   }
@@ -93,6 +96,8 @@ function evaluateProcedureDefinition(exp: ASTProcedureDefNode, env: Environment)
 }
 
 export function evaluate(exp: ASTNode, env: Environment): any {
+  if (exp === undefined) return; // comments, newlines
+
   switch (exp.type) {
     // for literals and lists, just return the value
     case ASTNodeType.StringLiteral:

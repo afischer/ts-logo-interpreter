@@ -7,8 +7,10 @@ import { checkInputs, unimplemented } from "./util";
 type Procedures =
 "run"
 | "repeat"
+| "if"
 | "ifelse"
 | "foreach"
+| 'output'
 
 type ConditionalFuncArgs = {
   condition: boolean,
@@ -24,8 +26,10 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
   static procedureArgCounts: Record<Procedures, number> = {
     run: 1,
     repeat: 2,
+    if: -1, // this is a special case, but need to make the compiler happy
     ifelse: -1, // this is a special case, but need to make the compiler happy
     foreach: 2,
+    output: 1
   }
 
   // pull this out as it's likely to be reused a number of times in these
@@ -44,6 +48,12 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
       const repeatCount = args[0];
       const instructionList = args[1]
       Array.from({length: repeatCount}, () => this.run(instructionList))
+    },
+
+    if: ({condition, thenDo}: ConditionalFuncArgs) => {
+      if (condition) {
+        this.run((thenDo.value as ASTNode[]).map(x => x.value))
+      }
     },
 
     ifelse: ({condition, thenDo, elseDo}: ConditionalFuncArgs) => {
@@ -71,6 +81,10 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
 
         this.run(toRun)
       })
+    },
+
+    output: (...args: any[]) => {
+      return args[0]
     }
   }
 

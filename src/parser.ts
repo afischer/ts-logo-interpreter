@@ -165,8 +165,7 @@ export default class Parser {
       node.args.push(this.parseExpression())
       this.advance();
     }
-    // advance past rparen
-    this.advance()
+
     return node;
   }
 
@@ -181,13 +180,18 @@ export default class Parser {
         this.advance()
       } else {
         // treat all items in a list as if they were a word
-        items.push({
-          type: ASTNodeType.StringLiteral,
-          value: this.currentToken.value
-        })
+        if (this.currentToken.value) {
+          items.push({
+            type: ASTNodeType.StringLiteral,
+            value: this.currentToken.value
+          })
+        }
         this.advance();
       }
     }
+
+    // this.advance();
+    console.log('Finished parsing list', items, 'at', this.currentToken);
 
     return {
       type: ASTNodeType.List,
@@ -218,7 +222,6 @@ export default class Parser {
     const argCount = this.procedureArgCounts.get(`${token.value}`.toLowerCase())
     if (!argCount) {
       throw new Error(`I don't know how to ${token.value}`);
-
     }
 
     while (
@@ -239,6 +242,8 @@ export default class Parser {
   }
 
   parseProcedureDefinition = (): ASTProcedureDefNode => {
+    console.log('>>>>>>>>>>> HI');
+
     this.advance();
     const procedureToken = this.currentToken;
     if (procedureToken.type !== TokenType.PROCEDURE) {
@@ -254,19 +259,28 @@ export default class Parser {
       if (this.currentToken.type === TokenType.VARIABLE) this.advance();
     }
 
+    console.log('>>>>>>>>>>> GOT vars', vars);
+
+    // set arg count for parsing calls. Must be set here so body can recursively
+    // call the funciton.
+    this.procedureArgCounts.set(procedureToken.value as string, vars.length);
+
     let finishedParsing = false;
     while (!finishedParsing) {
-      if (this.currentToken.type !== TokenType.PROCEDURE) {
-        finishedParsing = /^end$/i.test(this.currentToken.value as string)
-        break;
-      }
+      console.log('>>>>>>>>> IN PROC BODY PARSING', this.currentToken);
+
+      // if (this.currentToken.type === TokenType.PROCEDURE) {
+      //   finishedParsing = /^end$/i.test(this.currentToken.value as string)
+      //   break;
+      // }
 
       body.push(this.parseExpression())
       this.advance();
+      finishedParsing = /^end$/i.test(this.currentToken.value as string)
     }
 
-    // set arg count for parsing calls
-    this.procedureArgCounts.set(procedureToken.value as string, vars.length);
+    console.log('FINISHED PARSING PROCEDURE', procedureToken.value, vars, body);
+
 
     return {
       type: ASTNodeType.ProcedureDefinition,
@@ -284,26 +298,24 @@ export default class Parser {
     let thenDo: ASTNode;
     let elseDo: ASTNode;
 
-    const ifelseKeyword = this.currentToken.value as string;
+    const ifelseKeyword = `${this.currentToken.value}`.toLowerCase();
     // advance past keyword
     this.advance();
 
-    if (/^(ifelse)$/i.test(ifelseKeyword)) {
-      // if statment
-      console.log('> AT TOKEN', this.currentToken)
+    if (ifelseKeyword === 'ifelse') {
       condition = this.parseExpression();
       this.advance()
-      console.log('> AFTER COND', this.currentToken)
       thenDo = this.parseExpression();
+      console.log('then is', thenDo);
       this.advance()
-      console.log('> AFTER THEN', this.currentToken)
       elseDo = this.parseExpression();
-      console.log('> AFTER ELSE', this.currentToken)
-    }
-    // } else if (/^(ifelse)$/i.test(this.currentToken.value as string)) {
-    //   // if statment
-    // }
+      console.log('else is', elseDo);
 
+    } else if (ifelseKeyword === 'if') {
+      condition = this.parseExpression();
+      this.advance()
+      thenDo = this.parseExpression();
+    }
     return {
       type: ASTNodeType.Conditional,
       value: ifelseKeyword,
@@ -343,8 +355,9 @@ export default class Parser {
           left = this.parseBoolean();
           break;
         }
-        if (/^(ifelse)$/i.test(this.currentToken.value as string)) {
+        if (/^(if(else)?)$/i.test(this.currentToken.value as string)) {
           left = this.parseConditional();
+          console.log('hi')
           break;
         }
         // variable assignment is just a special primitive procedure, "make"
@@ -362,7 +375,6 @@ export default class Parser {
     while (precedence < getPrecedence((this.peek() || {}).type)) {
       // parse infix expression
       if (InfixOperators.has(this.peek().type)) {
-        // TODO: parse calls
         this.advance();
         left = this.parseInfix(left);
       } else {
@@ -385,7 +397,9 @@ export default class Parser {
     this.currentToken = this.tokens[this.index];
 
     while (this.currentToken.type !== TokenType.EOF) {
-      this.program.push(this.parseExpression());
+      const nextExp = this.parseExpression();
+      // TODO: deal with newlines, comments better
+      if (nextExp !== undefined) this.program.push(nextExp);
       this.advance();
     }
 
