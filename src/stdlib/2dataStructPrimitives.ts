@@ -150,10 +150,11 @@ type Procedures =
       if (args.length < 2) throw new Error("Not enough inputs to word")
       return args.join("")
     },
-    list: unimplemented,
+    list: (...args: any[]) => {
+      return args
+    },
     sentence: (...args: any[]) => {
-      if (args.length < 2) throw new Error("Not enough inputs to sentence")
-      return args.reduce((acc, curr) => {
+      return args.flatMap(x => x).reduce((acc, curr) => {
         if (Array.isArray(curr)) {
           acc.push(...curr)
           return acc;
@@ -185,7 +186,10 @@ type Procedures =
       return args[0]
     },
     firsts: unimplemented,
-    last: unimplemented,
+    last:  (...args: any[]) => {
+      checkInputs('first', 1, args)
+      return args[args.length - 1]
+    },
     butfirst: unimplemented,
     butfirsts: unimplemented,
     butlast: unimplemented,
@@ -212,7 +216,8 @@ type Procedures =
     listp: unimplemented,
     arrayp: unimplemented,
     emptyp: (...args: any[]) => {
-      return args[0].length > 0
+      console.log('RUNING EMPTY', args[0].length === 0)
+      return args[0].length === 0
     },
     'empty?': unimplemented, // not really
     equalp: (...args: any[]) => {
@@ -228,7 +233,7 @@ type Procedures =
     backslashedp: unimplemented,
 
     // 2.5 queries
-    count: unimplemented,
+    count: (...args: any[]) => args.length,
     ascii: unimplemented,
     rawascii: unimplemented,
     char: unimplemented,

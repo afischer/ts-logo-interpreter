@@ -5,6 +5,8 @@ export function unimplemented() {
 }
 
 export function listStringFromASTNode(list: ASTNode[]): string {
+  console.log(list);
+
   return '[' + list.map(entry => entry.type === ASTNodeType.List
     ? listStringFromASTNode(entry.value as ASTNode[])
     : entry.value).join(' ') + ']';

@@ -101,16 +101,10 @@ export default function lex(input: string): Token[] {
         ? TokenType.VARIABLE
         : TokenType.PROCEDURE;
 
-    // allow parser to strip off colon, quote
-    let value = currentChar; // type === TokenType.PROCEDURE ? currentChar : '';
-    advance();
+    let value = '';
 
-    while (currentChar && /\w|\.|\?|'|"|:|\\|#/.test(currentChar)) {
-      // if current character is a backslash, advance and take the next char verbatim
-      // NB: this seems wrong
-      if (currentChar === '\\') {
-        advance()
-      }
+    while (currentChar && /\w|\.|\?|'|"|:|\\|#|\-/.test(currentChar)) {
+      while (currentChar === '\\') advance()
       value += currentChar;
       advance()
     }
@@ -120,7 +114,6 @@ export default function lex(input: string): Token[] {
 
   // TODO: p6 A line(an instruction line or one read by READLIST or READWORD) can be continued onto the following line if its last character is a tilde(~)
   while (pos.index !== inputLen) {
-    process.stdout.write(currentChar);
     if (currentChar === '\n') {
       // keep track of newlines
       pos.row += 1;
@@ -190,8 +183,9 @@ export default function lex(input: string): Token[] {
       tokens.push({ type: TokenType.EQL, value: currentChar })
       advance();
     } else if (/\d|\./.test(currentChar)) { // numbers
+      if (currentChar === '\\') console.log('NUM??')
       tokens.push(tokenizeNumber())
-    } else if (/\?|\w|'|"|:|\\|#/.test(currentChar)) { // words
+    } else if (/\?|\w|'|"|:|\\|#|\-/g.test(currentChar)) { // words
       tokens.push(tokenizeWord())
     } else {
       throw new Error(`Error on line ${pos.row}:${pos.col}\nUnknown token ${currentChar}`)

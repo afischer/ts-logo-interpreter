@@ -190,9 +190,6 @@ export default class Parser {
       }
     }
 
-    // this.advance();
-    console.log('Finished parsing list', items, 'at', this.currentToken);
-
     return {
       type: ASTNodeType.List,
       value: items
@@ -221,6 +218,8 @@ export default class Parser {
     // otherwise pull args:
     const argCount = this.procedureArgCounts.get(`${token.value}`.toLowerCase())
     if (!argCount) {
+      console.log(this.procedureArgCounts.keys());
+
       throw new Error(`I don't know how to ${token.value}`);
     }
 
@@ -242,8 +241,6 @@ export default class Parser {
   }
 
   parseProcedureDefinition = (): ASTProcedureDefNode => {
-    console.log('>>>>>>>>>>> HI');
-
     this.advance();
     const procedureToken = this.currentToken;
     if (procedureToken.type !== TokenType.PROCEDURE) {
@@ -259,15 +256,12 @@ export default class Parser {
       if (this.currentToken.type === TokenType.VARIABLE) this.advance();
     }
 
-    console.log('>>>>>>>>>>> GOT vars', vars);
-
     // set arg count for parsing calls. Must be set here so body can recursively
     // call the funciton.
-    this.procedureArgCounts.set(procedureToken.value as string, vars.length);
+    this.procedureArgCounts.set(`${procedureToken.value}`.toLowerCase(), vars.length);
 
     let finishedParsing = false;
     while (!finishedParsing) {
-      console.log('>>>>>>>>> IN PROC BODY PARSING', this.currentToken);
 
       // if (this.currentToken.type === TokenType.PROCEDURE) {
       //   finishedParsing = /^end$/i.test(this.currentToken.value as string)
@@ -278,8 +272,6 @@ export default class Parser {
       this.advance();
       finishedParsing = /^end$/i.test(this.currentToken.value as string)
     }
-
-    console.log('FINISHED PARSING PROCEDURE', procedureToken.value, vars, body);
 
 
     return {
@@ -326,7 +318,7 @@ export default class Parser {
   }
 
   parseExpression = (precedence = 0): ASTNode => {
-    console.log('parsing expression, current is', this.currentToken);
+    // console.log('parsing expression, current is', this.currentToken);
 
     let left: ASTNode;
 

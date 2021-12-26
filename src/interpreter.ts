@@ -41,21 +41,23 @@ export class Environment {
    * TODO: Make this case insensitive
    */
   get = (name: string) => {
-    if (this.vars.has(name)) return this.vars.get(name);
+    const scope = this.lookup(name)
+    if (scope.vars.has(name)) return scope.vars.get(name);
     throw new Error(`Undefined variable ${name}`);
   }
 
   set = (name: string, value: any) => {
-    // maybe we should add some guards against assigning to global vars?? need
-    // to check implemementaton
-    this.vars.set(name, value);
-    console.log('vars are now', this.vars)
+    // all set vars are in the global scope
+    let scope: Environment = this;
+    while (scope.parent) { scope = this.parent }
+    scope.vars.set(name, value);
+    // console.log('vars are now', this.vars)
   }
 
   defineProcedure = (name: string, value: any) => {
     // maybe we should add some guards against assigning to global vars?? need
     // to check implemementaton
-    this.procedures.set(name, value);
+    this.procedures.set(name.toLowerCase(), value);
   }
 
   getProcedure = (name: string) => {
@@ -95,6 +97,10 @@ function evaluateProcedureDefinition(exp: ASTProcedureDefNode, env: Environment)
   env.defineProcedure(procedureName, procedure);
 }
 
+const unwrapList = (listnode: ASTNode): Array<any> => {
+  return (listnode.value as ASTNode[]).map(x => x.type === ASTNodeType.List ? unwrapList(x) : x.value)
+}
+
 export function evaluate(exp: ASTNode, env: Environment): any {
   if (exp === undefined) return; // comments, newlines
 
@@ -105,7 +111,7 @@ export function evaluate(exp: ASTNode, env: Environment): any {
     case ASTNodeType.Boolean:
       return exp.value;
     case ASTNodeType.List:
-      return (exp.value as Array<ASTNode>).map(x => x.value)
+      return unwrapList(exp)
     // for programs, evaluate each of the expressions in them in them
     case ASTNodeType.Program:
       // probably should be a foreach
@@ -113,14 +119,16 @@ export function evaluate(exp: ASTNode, env: Environment): any {
       // all return vals should be undefined; procedures shoudl use all variables
       const unknownVal = returnVal.flatMap(x => x).find(x => x !== undefined);
 
-      if (unknownVal) {
-        console.log('unknown val', unknownVal);
+      // if (unknownVal) {
+      //   console.log('unknown val', unknownVal);
 
-        if (Array.isArray(unknownVal)) {
-          throw new Error(`You don't say what to do with ${listStringFromASTNode(unknownVal)}`);
-        }
-        throw new Error(`You don't say what to do with ${unknownVal}`);
-      }
+      //   // if (Array.isArray(unknownVal)) {
+      //   //   throw new Error(`You don't say what to do with ${listStringFromASTNode(unknownVal)}`);
+      //   // }
+      //   throw new Error(`You don't say what to do with ${JSON.stringify(unknownVal, null, 2)}`);
+      // }
+      console.log(returnVal);
+
       return returnVal;
 
 

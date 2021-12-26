@@ -1,6 +1,7 @@
 import { Environment, evaluate } from "../interpreter";
 import lex from "../lexer";
 import Parser, { ASTNode, ASTNodeType } from "../parser";
+import { getListString } from "./4communicationPrimitives";
 import StdlibInterface from "./StdlibInterface";
 import { checkInputs, unimplemented } from "./util";
 
@@ -11,6 +12,7 @@ type Procedures =
 | "ifelse"
 | "foreach"
 | 'output'
+| 'stop'
 
 type ConditionalFuncArgs = {
   condition: boolean,
@@ -29,7 +31,8 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
     if: -1, // this is a special case, but need to make the compiler happy
     ifelse: -1, // this is a special case, but need to make the compiler happy
     foreach: 2,
-    output: 1
+    output: 1,
+    stop: 0
   }
 
   // pull this out as it's likely to be reused a number of times in these
@@ -39,7 +42,7 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
       const parser = new Parser();
       const lexed = lex(args[0].join(' '))
       const parsed = parser.parse(lexed);
-      evaluate(parsed, this.env);
+      return evaluate(parsed, this.env);
     }
 
   procedureDefs = {
@@ -51,13 +54,19 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
     },
 
     if: ({condition, thenDo}: ConditionalFuncArgs) => {
-      if (condition) {
+      const parsedCond = Array.isArray(condition) ? this.run(condition) : condition;
+      if (parsedCond) {
         this.run((thenDo.value as ASTNode[]).map(x => x.value))
       }
     },
 
     ifelse: ({condition, thenDo, elseDo}: ConditionalFuncArgs) => {
-      if (condition) {
+      console.log("IFELSE", condition, "thendo", thenDo, elseDo);
+      // can pass array to runparse to ifelse
+      const parsedCond = Array.isArray(condition) ? this.run(condition) : condition;
+      console.log('PARSEDCOND', parsedCond[0]);
+
+      if (parsedCond[0]) {
         this.run((thenDo.value as ASTNode[]).map(x => x.value))
       } else {
         this.run((elseDo.value as ASTNode[]).map(x => x.value))
@@ -71,20 +80,28 @@ export default class ControlStructurePrimitives implements StdlibInterface<Proce
 
       // if data is a string, split into characters, otherwise just use array
       [...data].forEach((val, i) => {
+
         // replace ? with val, # with index
         const toRun = template.map((x: string) =>  {
+
           // double escape strings/vars as they should print with " or :
+          if (Array.isArray(val)) val = '[' + getListString(val) + ']'
           if (x === '?') return /^"(|:)/.test(val) ? `"${val}` : val
           if (x === '#') return i
           return x;
         })
 
+        console.log('FOREACH TO RUN', template, toRun);
         this.run(toRun)
       })
     },
 
     output: (...args: any[]) => {
       return args[0]
+    },
+
+    stop: () => {
+      console.log('THIS SHOULD STOP THE CURRENT PROCESS...')
     }
   }
 

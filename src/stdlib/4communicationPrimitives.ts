@@ -1,7 +1,6 @@
 import { Environment } from "../interpreter";
-import { ASTNodeType } from "../parser";
 import StdlibInterface from "./StdlibInterface";
-import { checkInputs, listStringFromASTNode, unimplemented } from "./util";
+import { unimplemented } from "./util";
 
 type Procedures =
   "print"
@@ -9,10 +8,14 @@ type Procedures =
 | "show"
 
 
-function getListString(list: Array<any>): string {
-  return '[' + list.map(entry => Array.isArray(entry)
-    ? getListString(entry)
-    : entry).join(' ') + ']';
+export function getListString(list: Array<any>, topLevel = true): string {
+  const parsedList = list.map(entry =>
+    Array.isArray(entry)
+      ? getListString(entry, false)
+      : entry
+  ).join(' ');
+  // the top level list when printed should not be wrapped in brackets.
+  return topLevel ? parsedList : `[${parsedList}]`
 }
 
 /** 4 Communication */
@@ -40,15 +43,10 @@ export default class CommunicationPrimitives implements StdlibInterface<Procedur
     // 4.1 Transmitters
     print: (...args: any[]) => {
       if (Array.isArray(args[0])) {
-        process.stdout.write(
-          '[' +
-          args[0].map(x => Array.isArray(x)
-            ? getListString(x)
-            : x
-        ).join(" ") + ']\n');
-        return;
+        process.stdout.write(getListString(args[0]) + '\n');
+      } else {
+        process.stdout.write(args.join(" ") + '\n');
       }
-      process.stdout.write(args.join(" ") + '\n')
     },
     type: unimplemented,
     show: unimplemented,

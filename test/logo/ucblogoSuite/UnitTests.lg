@@ -24,6 +24,8 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to RunTests :Tests
+  print "TESTS---
+  print :Tests
   IFELSE [EMPTY? :Tests] [STOP] [
     PrintTestName (WORD FIRST :Tests "...\ )
 
@@ -51,8 +53,8 @@ to RunAll
   PRINT [ Berkeley Logo Unit Tests]
   PRINT [--------------------------]
   PRINT se [Test Suites: ] (count :Tests.All)
-  FOREACH :Tests.All [PRINT " (PrintHeader LAST ? ) (RUN FIRST ?)
-  PRINT [----------------------------------------------------------]]
+  FOREACH :Tests.All [PRINT " (PrintHeader LAST ? ) (RUN FIRST ?)]
+  ; PRINT [----------------------------------------------------------]]
   PRINT []
   PRINT [All tests completed.]
 end
@@ -107,48 +109,50 @@ end
 ;LOAD "UnitTests-LogoLib-Loops.lg
 ;LOAD "UnitTests-Mem.lg
 
-LOAD "UnitTests-Arithmetic.lg
+; LOAD "UnitTests-Arithmetic.lg
 LOAD "UnitTests-Bitwise.lg
-LOAD "UnitTests-Constructors.lg
-LOAD "UnitTests-Files.lg
-LOAD "UnitTests-Macros.lg
-LOAD "UnitTests-Predicates.lg
-LOAD "UnitTests-Random.lg
-LOAD "UnitTests-MemMgr.lg
-LOAD "UnitTests-OOP.lg
+; LOAD "UnitTests-Constructors.lg
+; LOAD "UnitTests-Files.lg
+; LOAD "UnitTests-Macros.lg
+; LOAD "UnitTests-Predicates.lg
+; LOAD "UnitTests-Random.lg
+; LOAD "UnitTests-MemMgr.lg
+; LOAD "UnitTests-OOP.lg
 
 
 ;; Process any command line options
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-to ProcessCommandLineArgs :Args
-  IF EMPTY? :Args [ STOP ]
-  IF EQUAL? FIRST :Args "-x [
-    MAKE "RunAndExit "True
-    ProcessCommandLineArgs BUTFIRST :Args
-    STOP
-  ]
-  IF EQUAL? FIRST :Args "-f [
-    IFELSE NOT EMPTY? BUTFIRST :Args [
-      MAKE "OutputFilename FIRST BUTFIRST :Args
-      ProcessCommandLineArgs BUTFIRST BUTFIRST :Args
-      STOP
-    ] [
-      PRINT [not enough inputs to -f]
-      STOP
-    ]
-  ]
-  PRINT SENTENCE [I don't know how to] FIRST :Args
-  ProcessCommandLineArgs BUTFIRST :Args
-end
+; to ProcessCommandLineArgs :Args
+;   IF EMPTY? :Args [ STOP ]
+;   IF EQUAL? FIRST :Args "-x [
+;     MAKE "RunAndExit "True
+;     ProcessCommandLineArgs BUTFIRST :Args
+;     STOP
+;   ]
+;   IF EQUAL? FIRST :Args "-f [
+;     IFELSE NOT EMPTY? BUTFIRST :Args [
+;       MAKE "OutputFilename FIRST BUTFIRST :Args
+;       ProcessCommandLineArgs BUTFIRST BUTFIRST :Args
+;       STOP
+;     ] [
+;       PRINT [not enough inputs to -f]
+;       STOP
+;     ]
+;   ]
+;   PRINT SENTENCE [I don't know how to] FIRST :Args
+;   ProcessCommandLineArgs BUTFIRST :Args
+; end
 
-ProcessCommandLineArgs :COMMAND.LINE
+; ProcessCommandLineArgs :COMMAND.LINE
 
-IF NAME? "OutputFilename [
-  OPENWRITE :OutputFilename SETWRITE :OutputFilename
-]
+; IF NAME? "OutputFilename [
+;   OPENWRITE :OutputFilename SETWRITE :OutputFilename
+; ]
 
-IF NAME? "RunAndExit [
-  RunAll
-  BYE
-]
+; IF NAME? "RunAndExit [
+;   RunAll
+;   BYE
+; ]
+
+RunAll

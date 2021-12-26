@@ -1,5 +1,9 @@
-import { Environment } from "../interpreter";
-import { ASTNodeType } from "../parser";
+import { readFileSync } from 'fs';
+import * as path from 'path';
+
+import { Environment, evaluate } from "../interpreter";
+import lex from '../lexer';
+import Parser, { ASTNodeType } from "../parser";
 import StdlibInterface from "./StdlibInterface";
 import { checkInputs, unimplemented } from "./util";
 
@@ -7,6 +11,7 @@ type Procedures =
 "make"
 | 'thing'
 | "end"
+| "load"
 
 
 export default class WorkspaceManagementPrimitives implements StdlibInterface<Procedures> {
@@ -19,6 +24,7 @@ export default class WorkspaceManagementPrimitives implements StdlibInterface<Pr
     make: 2,
     thing: 1,
     end: 0,
+    load: 1,
   }
 
   procedureDefs = {
@@ -30,7 +36,17 @@ export default class WorkspaceManagementPrimitives implements StdlibInterface<Pr
       checkInputs('thing', 1, args, 'string')
       return this.env.get(args[0])
     },
-    end: () => {}
+    end: () => {},
+    load: (...args: any[]) => {
+      // todo: support the directory hadling stuff
+      const filepath = path.join(__dirname, '../../test/logo/ucblogoSuite', args[0]);
+      const data = readFileSync(filepath, 'utf-8');
+      console.log(data);
+      const lexed = lex(data)
+      const parsed = new Parser().parse(lexed)
+      evaluate(parsed, this.env);
+
+    }
   }
 
 
